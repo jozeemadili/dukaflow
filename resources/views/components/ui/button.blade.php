@@ -8,8 +8,8 @@
 
 @php
     $variants = [
-        'primary' => 'bg-primary text-white hover:bg-primary-deep active:bg-primary-press shadow-[0_1px_3px_rgba(0,55,112,0.08)]',
-        'secondary' => 'bg-canvas text-primary border border-primary/30 hover:bg-primary-subtle/20',
+        'primary' => 'bg-primary text-ink font-medium hover:bg-primary-deep active:bg-primary-press shadow-[0_1px_3px_rgba(0,55,112,0.08)]',
+        'secondary' => 'bg-canvas text-ink border border-ink/20 hover:bg-canvas-soft',
         'dark' => 'bg-brand-dark text-white hover:bg-ink',
         'danger' => 'bg-ruby text-white hover:opacity-90',
         'ghost' => 'bg-transparent text-ink-mute hover:text-ink hover:bg-hairline/60 shadow-none',

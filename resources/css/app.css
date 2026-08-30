@@ -7,13 +7,15 @@
     --font-sans: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand & accent */
-    --color-primary: #533afd;
-    --color-primary-deep: #4434d4;
-    --color-primary-press: #2e2b8c;
-    --color-primary-soft: #665efd;
-    --color-primary-subtle: #b9b9f9;
-    --color-brand-dark: #1c1e54;
+    /* Brand & accent — sampled from the DukaFlow logo (navy + gold) */
+    --color-primary: #c89a44;
+    --color-primary-deep: #b3873a;
+    --color-primary-press: #96702f;
+    --color-primary-soft: #d9ae5e;
+    --color-primary-subtle: #f3e6c8;
+    --color-brand-dark: #01162f;
+    --color-success: #1f8a57;
+    --color-success-subtle: #dcf2e6;
     --color-ruby: #ea2261;
     --color-magenta: #f96bee;
     --color-lemon: #9b6829;
@@ -26,11 +28,11 @@
     --color-hairline: #e3e8ee;
     --color-hairline-input: #a8c3de;
 
-    /* Text */
-    --color-ink: #0d253d;
-    --color-ink-secondary: #273951;
-    --color-ink-mute: #64748d;
-    --color-ink-mute-2: #61718a;
+    /* Text — navy from the logo */
+    --color-ink: #01162f;
+    --color-ink-secondary: #1f3a57;
+    --color-ink-mute: #5c6b7a;
+    --color-ink-mute-2: #5a6b80;
 
     /* Radius scale (design system) */
     --radius-xs: 4px;
@@ -64,17 +66,16 @@ body {
     font-weight: 300;
 }
 
-/* Gradient mesh backdrop — cream / sherbet / lavender / indigo / ruby wash */
+/* Gradient mesh backdrop — cream / gold / navy wash, matching the DukaFlow mark */
 .gradient-mesh {
     position: relative;
     background-color: var(--color-canvas);
     background-image:
-        radial-gradient(60% 55% at 8% 20%, rgba(245, 233, 212, 0.9) 0%, rgba(245, 233, 212, 0) 60%),
-        radial-gradient(50% 50% at 28% 12%, rgba(249, 178, 107, 0.55) 0%, rgba(249, 178, 107, 0) 60%),
-        radial-gradient(55% 60% at 52% 25%, rgba(183, 176, 250, 0.8) 0%, rgba(183, 176, 250, 0) 65%),
-        radial-gradient(45% 55% at 72% 15%, rgba(83, 58, 253, 0.55) 0%, rgba(83, 58, 253, 0) 65%),
-        radial-gradient(40% 45% at 92% 28%, rgba(249, 107, 238, 0.45) 0%, rgba(249, 107, 238, 0) 60%),
-        radial-gradient(50% 50% at 85% 5%, rgba(234, 34, 97, 0.35) 0%, rgba(234, 34, 97, 0) 60%);
+        radial-gradient(60% 55% at 8% 20%, rgba(245, 233, 212, 0.95) 0%, rgba(245, 233, 212, 0) 60%),
+        radial-gradient(50% 50% at 30% 10%, rgba(200, 154, 68, 0.4) 0%, rgba(200, 154, 68, 0) 60%),
+        radial-gradient(55% 60% at 55% 22%, rgba(217, 174, 94, 0.45) 0%, rgba(217, 174, 94, 0) 65%),
+        radial-gradient(45% 55% at 75% 12%, rgba(1, 22, 47, 0.18) 0%, rgba(1, 22, 47, 0) 65%),
+        radial-gradient(40% 45% at 92% 28%, rgba(155, 104, 41, 0.3) 0%, rgba(155, 104, 41, 0) 60%);
     filter: saturate(1.05);
 }
 
@@ -98,7 +99,7 @@ body {
 
 .icon-dock-item.is-active {
     background-color: var(--color-primary);
-    color: #ffffff;
+    color: var(--color-ink);
 }
 
 /* Loading spinner */

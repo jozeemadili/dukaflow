@@ -27,8 +27,8 @@
                     [
                         'label' => 'Sales',
                         'data' => $salesTrend,
-                        'borderColor' => '#533afd',
-                        'backgroundColor' => 'rgba(83,58,253,0.08)',
+                        'borderColor' => '#c89a44',
+                        'backgroundColor' => 'rgba(200,154,68,0.12)',
                         'fill' => true,
                         'tension' => 0.4,
                         'pointRadius' => 0,

@@ -2,7 +2,7 @@
 
 @php
     $tones = [
-        'success' => 'bg-primary-subtle/40 text-primary-deep',
+        'success' => 'bg-success-subtle text-success',
         'warning' => 'bg-canvas-cream text-lemon',
         'danger' => 'bg-ruby/10 text-ruby',
         'neutral' => 'bg-hairline text-ink-mute',
