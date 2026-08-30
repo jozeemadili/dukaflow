@@ -1,0 +1,11 @@
+{
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "name": "dukaflow",
+            "runtimeExecutable": "php",
+            "runtimeArgs": ["artisan", "dev", "--inline"],
+            "port": 8000
+        }
+    ]
+}
