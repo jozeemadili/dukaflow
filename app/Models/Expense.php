@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['merchant_id', 'branch_id', 'category', 'amount', 'description', 'expense_date', 'recorded_by'])]
 class Expense extends Model
 {
-    public const CATEGORIES = ['rent', 'payroll', 'utilities', 'transport', 'supplier', 'other'];
-
     protected function casts(): array
     {
         return [

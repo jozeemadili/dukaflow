@@ -212,7 +212,7 @@ class Index extends Component
         foreach ($this->cart as $line) {
             $lineGross = $line['quantity'] * $line['unit_price'];
             $gross += $lineGross;
-            $lineDiscount += $this->lineDiscountAmount($line, $lineGross);
+            $lineDiscount += $this->lineDiscountAmount($line);
         }
 
         $subtotal = $gross - $lineDiscount;
@@ -235,15 +235,29 @@ class Index extends Component
         ];
     }
 
-    public function lineDiscountAmount(array $line, float $lineGross): float
+    /**
+     * The item's selling price after its per-unit discount is applied.
+     * Fixed discounts are a per-unit amount (e.g. "$2 off each unit"), the
+     * same way a percentage discount reduces the per-unit price.
+     */
+    public function discountedUnitPrice(array $line): float
     {
         if (empty($line['discount_type']) || empty($line['discount_value'])) {
-            return 0.0;
+            return (float) $line['unit_price'];
         }
 
-        return $line['discount_type'] === 'percent'
-            ? $lineGross * ((float) $line['discount_value'] / 100)
-            : min((float) $line['discount_value'], $lineGross);
+        $discounted = $line['discount_type'] === 'percent'
+            ? $line['unit_price'] * (1 - ((float) $line['discount_value'] / 100))
+            : $line['unit_price'] - (float) $line['discount_value'];
+
+        return max(0.0, $discounted);
+    }
+
+    public function lineDiscountAmount(array $line): float
+    {
+        $perUnitDiscount = (float) $line['unit_price'] - $this->discountedUnitPrice($line);
+
+        return $perUnitDiscount * (float) $line['quantity'];
     }
 
     public function effectiveDiscountPercent(): float
@@ -403,7 +417,7 @@ class Index extends Component
 
             foreach ($this->cart as $itemId => $line) {
                 $lineGross = $line['quantity'] * $line['unit_price'];
-                $lineDiscountAmount = $this->lineDiscountAmount($line, $lineGross);
+                $lineDiscountAmount = $this->lineDiscountAmount($line);
 
                 SaleItem::create([
                     'sale_id' => $sale->id,

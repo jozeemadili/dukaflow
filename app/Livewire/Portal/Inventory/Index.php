@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Portal\Inventory;
 
+use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\Auth;
@@ -19,9 +20,18 @@ class Index extends Component
 
     public string $name = '';
 
+    /** @var array<int, array{id:int,name:string,quantity_on_hand:string,unit:?string}> */
+    public array $nameMatches = [];
+
     public string $sku = '';
 
     public string $barcode = '';
+
+    public string $category_id = '';
+
+    public bool $addingNewCategory = false;
+
+    public string $newCategoryName = '';
 
     public string $unit = '';
 
@@ -39,10 +49,67 @@ class Index extends Component
 
     public string $movementQuantity = '';
 
+    public string $categoryFilter = '';
+
+    public function updatedName(string $value): void
+    {
+        $trimmed = trim($value);
+
+        if (mb_strlen($trimmed) < 2) {
+            $this->nameMatches = [];
+
+            return;
+        }
+
+        $this->nameMatches = InventoryItem::where('merchant_id', Auth::user()->merchant_id)
+            ->where('name', 'like', "%{$trimmed}%")
+            ->limit(5)
+            ->get(['id', 'name', 'quantity_on_hand', 'unit'])
+            ->map(fn ($i) => [
+                'id' => $i->id,
+                'name' => $i->name,
+                'quantity_on_hand' => $i->quantity_on_hand,
+                'unit' => $i->unit,
+            ])
+            ->all();
+    }
+
+    public function useExistingItem(int $itemId): void
+    {
+        $this->reset(['name', 'sku', 'barcode', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
+        $this->reorder_level = '0';
+        $this->startMovement($itemId);
+    }
+
+    public function updatedCategoryId(string $value): void
+    {
+        $this->addingNewCategory = $value === '__new__';
+    }
+
+    public function saveNewCategory(): void
+    {
+        $this->validate(['newCategoryName' => ['required', 'string', 'max:255']]);
+
+        $category = InventoryCategory::firstOrCreate([
+            'merchant_id' => Auth::user()->merchant_id,
+            'name' => $this->newCategoryName,
+        ]);
+
+        $this->category_id = (string) $category->id;
+        $this->newCategoryName = '';
+        $this->addingNewCategory = false;
+    }
+
+    public function filterByCategory(?int $categoryId): void
+    {
+        $this->categoryFilter = $categoryId ? (string) $categoryId : '';
+    }
+
     public function addItem()
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['nullable'],
             'reorder_level' => ['required', 'numeric', 'min:0'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
@@ -51,6 +118,7 @@ class Index extends Component
 
         $item = InventoryItem::create([
             'merchant_id' => Auth::user()->merchant_id,
+            'category_id' => $this->category_id && $this->category_id !== '__new__' ? $this->category_id : null,
             'name' => $this->name,
             'sku' => $this->sku ?: null,
             'barcode' => $this->barcode ?: null,
@@ -66,7 +134,7 @@ class Index extends Component
                 ->toMediaCollection('image');
         }
 
-        $this->reset(['name', 'sku', 'barcode', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm']);
+        $this->reset(['name', 'sku', 'barcode', 'category_id', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
         $this->reorder_level = '0';
         session()->flash('status', 'Inventory item added.');
     }
@@ -107,8 +175,17 @@ class Index extends Component
 
     public function render()
     {
+        $merchantId = Auth::user()->merchant_id;
+
+        $items = InventoryItem::where('merchant_id', $merchantId)
+            ->when($this->categoryFilter, fn ($q) => $q->where('category_id', $this->categoryFilter))
+            ->with('category')
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.portal.inventory.index', [
-            'items' => InventoryItem::where('merchant_id', Auth::user()->merchant_id)->orderBy('name')->get(),
+            'items' => $items,
+            'categories' => InventoryCategory::where('merchant_id', $merchantId)->withCount('items')->orderBy('name')->get(),
         ]);
     }
 }

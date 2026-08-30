@@ -102,6 +102,16 @@ class Merchant extends Model
         return $this->hasMany(DiscountLimit::class);
     }
 
+    public function expenseCategories(): HasMany
+    {
+        return $this->hasMany(ExpenseCategory::class);
+    }
+
+    public function inventoryCategories(): HasMany
+    {
+        return $this->hasMany(InventoryCategory::class);
+    }
+
     public function paymentRecords(): HasMany
     {
         return $this->hasMany(PaymentRecord::class);

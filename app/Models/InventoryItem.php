@@ -10,7 +10,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['merchant_id', 'name', 'sku', 'barcode', 'unit', 'quantity_on_hand', 'reorder_level', 'unit_cost', 'unit_price'])]
+#[Fillable(['merchant_id', 'category_id', 'name', 'sku', 'barcode', 'unit', 'quantity_on_hand', 'reorder_level', 'unit_cost', 'unit_price'])]
 class InventoryItem extends Model implements HasMedia
 {
     use InteractsWithMedia;
@@ -35,6 +35,11 @@ class InventoryItem extends Model implements HasMedia
         return $this->belongsTo(Merchant::class);
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(InventoryCategory::class, 'category_id');
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
@@ -43,6 +48,11 @@ class InventoryItem extends Model implements HasMedia
     public function stockReceiptItems(): HasMany
     {
         return $this->hasMany(StockReceiptItem::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
     }
 
     public function isLowStock(): bool

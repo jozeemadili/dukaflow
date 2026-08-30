@@ -104,25 +104,33 @@
             <div class="max-h-[38vh] overflow-y-auto divide-y divide-hairline">
                 @forelse($cart as $itemId => $line)
                     @php
-                        $lineGross = $line['quantity'] * $line['unit_price'];
                         $lineHasDiscount = ! empty($line['discount_type']) && ! empty($line['discount_value']);
+                        $discountedUnitPrice = $this->discountedUnitPrice($line);
+                        $lineTotal = $discountedUnitPrice * $line['quantity'];
                     @endphp
                     <div class="px-5 py-3">
                         <div class="flex items-center gap-3">
                             <div class="flex-1 min-w-0">
                                 <p class="text-[13px] text-ink font-medium truncate">{{ $line['name'] }}</p>
-                                <p class="text-[12px] text-ink-mute tnum">TZS {{ number_format($line['unit_price'], 0) }} each</p>
+                                <p class="text-[12px] text-ink-mute tnum">
+                                    @if($lineHasDiscount)
+                                        <span class="line-through">TZS {{ number_format($line['unit_price'], 0) }}</span>
+                                        <span class="text-primary-deep font-medium">TZS {{ number_format($discountedUnitPrice, 0) }}</span> each
+                                    @else
+                                        TZS {{ number_format($line['unit_price'], 0) }} each
+                                    @endif
+                                </p>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <button wire:click="decrementQty({{ $itemId }})" class="h-6 w-6 rounded-full border border-hairline text-ink-secondary hover:border-primary/50 flex items-center justify-center text-[13px]">&minus;</button>
                                 <span class="w-6 text-center text-[13px] tnum">{{ rtrim(rtrim(number_format($line['quantity'], 2, '.', ''), '0'), '.') }}</span>
                                 <button wire:click="incrementQty({{ $itemId }})" class="h-6 w-6 rounded-full border border-hairline text-ink-secondary hover:border-primary/50 flex items-center justify-center text-[13px]">&plus;</button>
                             </div>
-                            <p class="w-16 text-right text-[13px] text-ink tnum">{{ number_format($lineGross - $this->lineDiscountAmount($line, $lineGross), 0) }}</p>
+                            <p class="w-16 text-right text-[13px] text-ink tnum">{{ number_format($lineTotal, 0) }}</p>
                         </div>
                         <div class="flex items-center justify-between mt-1">
                             <button wire:click="startLineDiscount({{ $itemId }})" class="text-[11px] {{ $lineHasDiscount ? 'text-primary-deep font-medium' : 'text-ink-mute' }} hover:text-primary-deep">
-                                {{ $lineHasDiscount ? 'Discount: '.($line['discount_type'] === 'percent' ? $line['discount_value'].'%' : 'TZS '.number_format($line['discount_value'], 0)) : '+ discount' }}
+                                {{ $lineHasDiscount ? 'Discount: '.($line['discount_type'] === 'percent' ? $line['discount_value'].'% per unit' : 'TZS '.number_format($line['discount_value'], 0).' per unit') : '+ discount' }}
                             </button>
                             <button wire:click="removeFromCart({{ $itemId }})" class="text-[11px] text-ink-mute hover:text-ruby">remove</button>
                         </div>

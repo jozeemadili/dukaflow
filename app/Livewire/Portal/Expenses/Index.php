@@ -3,6 +3,7 @@
 namespace App\Livewire\Portal\Expenses;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -13,7 +14,11 @@ class Index extends Component
 {
     use WithPagination;
 
-    public string $category = 'other';
+    public string $category = '';
+
+    public bool $addingNewCategory = false;
+
+    public string $newCategoryName = '';
 
     public string $amount = '';
 
@@ -24,19 +29,46 @@ class Index extends Component
     public function mount()
     {
         $this->expense_date = now()->toDateString();
+
+        $merchantId = Auth::user()->merchant_id;
+        ExpenseCategory::ensureDefaultsFor($merchantId);
+        $this->category = (string) ExpenseCategory::where('merchant_id', $merchantId)->orderBy('name')->value('id');
+    }
+
+    public function updatedCategory(string $value): void
+    {
+        $this->addingNewCategory = $value === '__new__';
+    }
+
+    public function saveNewCategory()
+    {
+        $this->validate([
+            'newCategoryName' => ['required', 'string', 'max:255'],
+        ]);
+
+        $category = ExpenseCategory::firstOrCreate([
+            'merchant_id' => Auth::user()->merchant_id,
+            'name' => $this->newCategoryName,
+        ]);
+
+        $this->category = (string) $category->id;
+        $this->newCategoryName = '';
+        $this->addingNewCategory = false;
     }
 
     public function save()
     {
         $this->validate([
-            'category' => ['required', 'in:'.implode(',', Expense::CATEGORIES)],
+            'category' => ['required', 'exists:expense_categories,id'],
             'amount' => ['required', 'numeric', 'min:0'],
             'expense_date' => ['required', 'date'],
         ]);
 
+        $categoryName = ExpenseCategory::find($this->category)->name;
+
         Expense::create([
             'merchant_id' => Auth::user()->merchant_id,
-            'category' => $this->category,
+            'category' => $categoryName,
             'amount' => $this->amount,
             'description' => $this->description,
             'expense_date' => $this->expense_date,
@@ -44,20 +76,21 @@ class Index extends Component
         ]);
 
         $this->reset(['amount', 'description']);
-        $this->category = 'other';
         $this->expense_date = now()->toDateString();
         session()->flash('status', 'Expense recorded.');
     }
 
     public function render()
     {
-        $expenses = Expense::where('merchant_id', Auth::user()->merchant_id)
+        $merchantId = Auth::user()->merchant_id;
+
+        $expenses = Expense::where('merchant_id', $merchantId)
             ->latest('expense_date')
             ->paginate(15);
 
         return view('livewire.portal.expenses.index', [
             'expenses' => $expenses,
-            'categories' => Expense::CATEGORIES,
+            'categories' => ExpenseCategory::where('merchant_id', $merchantId)->orderBy('name')->get(),
         ]);
     }
 }
