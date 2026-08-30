@@ -54,9 +54,13 @@ Route::middleware(['auth', 'merchant'])->prefix('portal')->name('portal.')->grou
     Route::get('/sales', Portal\Sales\Index::class)->name('sales.index');
     Route::get('/expenses', Portal\Expenses\Index::class)->name('expenses.index');
     Route::get('/inventory', Portal\Inventory\Index::class)->name('inventory.index');
+    Route::get('/stock-receipts', Portal\StockReceipts\Index::class)->name('stock-receipts.index');
+    Route::get('/stock-receipts/{receipt}', Portal\StockReceipts\Show::class)->name('stock-receipts.show');
     Route::get('/suppliers', Portal\Suppliers\Index::class)->name('suppliers.index');
+    Route::get('/customers', Portal\Customers\Index::class)->name('customers.index');
     Route::get('/payments', Portal\Payments\Index::class)->name('payments.index');
     Route::get('/kyc', Portal\Kyc\Index::class)->name('kyc.index');
     Route::get('/staff', Portal\Staff\Index::class)->name('staff.index');
+    Route::get('/discount-limits', Portal\DiscountLimits\Index::class)->name('discount-limits.index');
     Route::get('/credit', Portal\Credit\Index::class)->name('credit.index');
 });

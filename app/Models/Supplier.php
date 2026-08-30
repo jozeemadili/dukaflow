@@ -20,6 +20,11 @@ class Supplier extends Model
         return $this->hasMany(SupplierTransaction::class);
     }
 
+    public function stockReceipts(): HasMany
+    {
+        return $this->hasMany(StockReceipt::class);
+    }
+
     public function outstandingBalance(): float
     {
         return (float) $this->transactions()

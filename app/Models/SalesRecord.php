@@ -7,20 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['merchant_id', 'branch_id', 'amount', 'items_count', 'description', 'sale_date', 'recorded_by'])]
+#[Fillable([
+    'merchant_id', 'branch_id', 'customer_id', 'amount', 'subtotal',
+    'discount_type', 'discount_value', 'discount_amount', 'discount_approved_by',
+    'payment_method', 'items_count', 'description', 'sale_date', 'recorded_by',
+])]
 class SalesRecord extends Model
 {
+    public const DISCOUNT_PERCENT = 'percent';
+
+    public const DISCOUNT_FIXED = 'fixed';
+
     protected function casts(): array
     {
         return [
             'sale_date' => 'date',
             'amount' => 'decimal:2',
+            'subtotal' => 'decimal:2',
+            'discount_value' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
         ];
     }
 
     public function merchant(): BelongsTo
     {
         return $this->belongsTo(Merchant::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function items(): HasMany
@@ -36,5 +52,10 @@ class SalesRecord extends Model
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public function discountApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'discount_approved_by');
     }
 }

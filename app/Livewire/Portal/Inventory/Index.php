@@ -8,15 +8,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.portal', ['title' => 'Inventory'])]
 class Index extends Component
 {
+    use WithFileUploads;
+
     public bool $showItemForm = false;
 
     public string $name = '';
 
     public string $sku = '';
+
+    public string $barcode = '';
 
     public string $unit = '';
 
@@ -25,6 +30,8 @@ class Index extends Component
     public string $unit_cost = '';
 
     public string $unit_price = '';
+
+    public $image;
 
     public ?int $movingItemId = null;
 
@@ -39,19 +46,27 @@ class Index extends Component
             'reorder_level' => ['required', 'numeric', 'min:0'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
+            'image' => ['nullable', 'image', 'max:4096'],
         ]);
 
-        InventoryItem::create([
+        $item = InventoryItem::create([
             'merchant_id' => Auth::user()->merchant_id,
             'name' => $this->name,
             'sku' => $this->sku ?: null,
+            'barcode' => $this->barcode ?: null,
             'unit' => $this->unit ?: null,
             'reorder_level' => $this->reorder_level,
             'unit_cost' => $this->unit_cost ?: null,
             'unit_price' => $this->unit_price ?: null,
         ]);
 
-        $this->reset(['name', 'sku', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'showItemForm']);
+        if ($this->image) {
+            $item->addMedia($this->image->getRealPath())
+                ->usingFileName($this->image->getClientOriginalName())
+                ->toMediaCollection('image');
+        }
+
+        $this->reset(['name', 'sku', 'barcode', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm']);
         $this->reorder_level = '0';
         session()->flash('status', 'Inventory item added.');
     }

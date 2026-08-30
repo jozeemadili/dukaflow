@@ -34,8 +34,14 @@
                     <a href="{{ route('portal.inventory.index') }}" class="icon-dock-item {{ request()->routeIs('portal.inventory.*') ? 'is-active' : '' }}">
                         <x-icon.inventory class="h-4 w-4 shrink-0" /> Inventory
                     </a>
+                    <a href="{{ route('portal.stock-receipts.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stock-receipts.*') ? 'is-active' : '' }}">
+                        <x-icon.stock-receipt class="h-4 w-4 shrink-0" /> Stock Receipts
+                    </a>
                     <a href="{{ route('portal.suppliers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.suppliers.*') ? 'is-active' : '' }}">
                         <x-icon.suppliers class="h-4 w-4 shrink-0" /> Suppliers
+                    </a>
+                    <a href="{{ route('portal.customers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.customers.*') ? 'is-active' : '' }}">
+                        <x-icon.customer class="h-4 w-4 shrink-0" /> Customers
                     </a>
                     <a href="{{ route('portal.payments.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payments.*') ? 'is-active' : '' }}">
                         <x-icon.receipt class="h-4 w-4 shrink-0" /> Payments
@@ -55,6 +61,12 @@
                     @can('manage-own-staff')
                     <a href="{{ route('portal.staff.index') }}" class="icon-dock-item {{ request()->routeIs('portal.staff.*') ? 'is-active' : '' }}">
                         <x-icon.users class="h-4 w-4 shrink-0" /> Staff
+                    </a>
+                    @endcan
+
+                    @can('manage-discount-limits')
+                    <a href="{{ route('portal.discount-limits.index') }}" class="icon-dock-item {{ request()->routeIs('portal.discount-limits.*') ? 'is-active' : '' }}">
+                        <x-icon.percent class="h-4 w-4 shrink-0" /> Discount Limits
                     </a>
                     @endcan
                 </nav>

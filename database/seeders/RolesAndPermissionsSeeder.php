@@ -30,6 +30,8 @@ class RolesAndPermissionsSeeder extends Seeder
         'manage-own-business',
         'manage-own-staff',
         'apply-credit',
+        'approve-stock-receipts',
+        'manage-discount-limits',
     ];
 
     private const ROLE_PERMISSIONS = [
@@ -42,14 +44,16 @@ class RolesAndPermissionsSeeder extends Seeder
         'finance_ops' => ['view-merchants', 'manage-merchants', 'verify-payments'],
         'partner_liaison' => ['view-merchants'],
 
-        'merchant_owner' => ['manage-own-business', 'manage-own-staff', 'apply-credit'],
+        'merchant_owner' => ['manage-own-business', 'manage-own-staff', 'apply-credit', 'approve-stock-receipts', 'manage-discount-limits'],
         'merchant_staff' => ['manage-own-business'],
 
-        // Roles a shop owner assigns to their own staff. All share the same
-        // coarse permission for now — split into finer-grained module
-        // permissions once per-role activity scopes are defined.
-        'merchant_manager' => ['manage-own-business'],
-        'merchant_supervisor' => ['manage-own-business'],
+        // Roles a shop owner assigns to their own staff. Base access is the
+        // same coarse permission for now — split into finer-grained module
+        // permissions once per-role activity scopes are defined. Stock
+        // receipt approval and discount-limit configuration are the two
+        // exceptions already called out by the business flow.
+        'merchant_manager' => ['manage-own-business', 'approve-stock-receipts', 'manage-discount-limits'],
+        'merchant_supervisor' => ['manage-own-business', 'approve-stock-receipts'],
         'merchant_sales' => ['manage-own-business'],
         'merchant_accountant' => ['manage-own-business'],
     ];
