@@ -1,88 +1,74 @@
-<div class="space-y-6">
+<div class="space-y-4">
     <div>
-        <button wire:click="$toggle('showItemForm')" class="bg-emerald-700 text-white rounded px-3 py-1.5 text-sm hover:bg-emerald-800">
+        <x-ui.button wire:click="$toggle('showItemForm')">
             {{ $showItemForm ? 'Cancel' : '+ Add inventory item' }}
-        </button>
+        </x-ui.button>
     </div>
 
     @if($showItemForm)
-        <form wire:submit="addItem" class="bg-white border rounded-lg p-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
-            <div class="md:col-span-2">
-                <label class="block text-xs font-medium text-slate-600 mb-1">Item name</label>
-                <input type="text" wire:model="name" class="w-full rounded border-slate-300 text-sm">
-                @error('name') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">SKU</label>
-                <input type="text" wire:model="sku" class="w-full rounded border-slate-300 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Unit</label>
-                <input type="text" wire:model="unit" placeholder="pcs, kg..." class="w-full rounded border-slate-300 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Reorder level</label>
-                <input type="number" step="0.01" wire:model="reorder_level" class="w-full rounded border-slate-300 text-sm">
-            </div>
-            <button type="submit" class="bg-emerald-700 text-white rounded px-3 py-2 text-sm hover:bg-emerald-800">Save item</button>
-        </form>
+        <x-ui.card>
+            <form wire:submit="addItem" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                <div class="md:col-span-2">
+                    <x-ui.input wire:model="name" label="Item name" id="item_name" />
+                </div>
+                <x-ui.input wire:model="sku" label="SKU" id="item_sku" />
+                <x-ui.input wire:model="unit" label="Unit" placeholder="pcs, kg..." id="item_unit" />
+                <x-ui.input type="number" step="0.01" wire:model="reorder_level" label="Reorder level" id="item_reorder" />
+                <x-ui.button type="submit" target="addItem">Save item</x-ui.button>
+            </form>
+            @error('name') <p class="text-ruby text-[12px] mt-2">{{ $message }}</p> @enderror
+        </x-ui.card>
     @endif
 
-    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+    <x-ui.card padding="p-0">
+        <table class="w-full text-[13px]">
+            <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
                 <tr>
-                    <th class="px-4 py-2">Item</th>
-                    <th class="px-4 py-2">SKU</th>
-                    <th class="px-4 py-2">On hand</th>
-                    <th class="px-4 py-2">Reorder level</th>
-                    <th class="px-4 py-2"></th>
+                    <th class="px-5 py-3 font-normal">Item</th>
+                    <th class="px-5 py-3 font-normal">SKU</th>
+                    <th class="px-5 py-3 font-normal">On hand</th>
+                    <th class="px-5 py-3 font-normal">Reorder level</th>
+                    <th class="px-5 py-3"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-hairline">
                 @forelse($items as $item)
-                    <tr>
-                        <td class="px-4 py-2 font-medium">{{ $item->name }}</td>
-                        <td class="px-4 py-2">{{ $item->sku }}</td>
-                        <td class="px-4 py-2 {{ $item->isLowStock() ? 'text-rose-600 font-semibold' : '' }}">
+                    <tr class="hover:bg-canvas-soft/60">
+                        <td class="px-5 py-3 text-ink font-medium">{{ $item->name }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $item->sku }}</td>
+                        <td class="px-5 py-3 tnum {{ $item->isLowStock() ? 'text-ruby font-semibold' : 'text-ink-secondary' }}">
                             {{ rtrim(rtrim($item->quantity_on_hand, '0'), '.') }} {{ $item->unit }}
                             @if($item->isLowStock())
-                                <span class="text-xs bg-rose-100 text-rose-700 rounded px-1.5 py-0.5 ml-1">low stock</span>
+                                <x-ui.badge tone="danger" class="ml-1">low stock</x-ui.badge>
                             @endif
                         </td>
-                        <td class="px-4 py-2">{{ rtrim(rtrim($item->reorder_level, '0'), '.') }}</td>
-                        <td class="px-4 py-2 text-right">
-                            <button wire:click="startMovement({{ $item->id }})" class="text-emerald-700 text-xs hover:underline">Record movement</button>
+                        <td class="px-5 py-3 tnum text-ink-secondary">{{ rtrim(rtrim($item->reorder_level, '0'), '.') }}</td>
+                        <td class="px-5 py-3 text-right">
+                            <x-ui.button size="sm" variant="secondary" wire:click="startMovement({{ $item->id }})" target="startMovement({{ $item->id }})">Record movement</x-ui.button>
                         </td>
                     </tr>
 
                     @if($movingItemId === $item->id)
-                        <tr class="bg-slate-50">
-                            <td colspan="5" class="px-4 py-3">
-                                <form wire:submit="saveMovement" class="flex gap-3 items-end">
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Type</label>
-                                        <select wire:model="movementType" class="rounded border-slate-300 text-sm">
-                                            <option value="in">Stock in</option>
-                                            <option value="out">Stock out</option>
-                                            <option value="adjustment">Adjustment</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Quantity</label>
-                                        <input type="number" step="0.01" wire:model="movementQuantity" class="rounded border-slate-300 text-sm">
-                                        @error('movementQuantity') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-                                    </div>
-                                    <button type="submit" class="bg-emerald-700 text-white rounded px-3 py-1.5 text-sm hover:bg-emerald-800">Save</button>
-                                    <button type="button" wire:click="$set('movingItemId', null)" class="text-slate-500 text-sm">Cancel</button>
+                        <tr class="bg-canvas-soft/60">
+                            <td colspan="5" class="px-5 py-4">
+                                <form wire:submit="saveMovement" class="flex flex-wrap gap-4 items-end">
+                                    <x-ui.select wire:model="movementType" label="Type" id="movement_type">
+                                        <option value="in">Stock in</option>
+                                        <option value="out">Stock out</option>
+                                        <option value="adjustment">Adjustment</option>
+                                    </x-ui.select>
+                                    <x-ui.input type="number" step="0.01" wire:model="movementQuantity" label="Quantity" id="movement_qty" />
+                                    <x-ui.button type="submit" variant="primary" size="sm" target="saveMovement">Save</x-ui.button>
+                                    <x-ui.button type="button" variant="ghost" size="sm" wire:click="$set('movingItemId', null)">Cancel</x-ui.button>
                                 </form>
+                                @error('movementQuantity') <p class="text-ruby text-[12px] mt-2">{{ $message }}</p> @enderror
                             </td>
                         </tr>
                     @endif
                 @empty
-                    <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">No inventory items yet.</td></tr>
+                    <tr><td colspan="5" class="px-5 py-8 text-center text-ink-mute">No inventory items yet.</td></tr>
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </x-ui.card>
 </div>

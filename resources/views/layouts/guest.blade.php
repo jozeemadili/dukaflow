@@ -7,15 +7,22 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-        <div class="text-center mb-6">
-            <span class="text-2xl font-bold text-emerald-700">DukaFlow</span>
-            <p class="text-sm text-slate-500">Tanzania SME financial operating system</p>
-        </div>
-        <div class="bg-white rounded-xl shadow p-6">
-            {{ $slot }}
-        </div>
+<body class="min-h-screen bg-canvas">
+    <div class="gradient-mesh min-h-screen flex flex-col">
+        <header class="px-8 py-6">
+            <span class="text-[20px] font-light tracking-tight text-ink">Duka<span class="font-medium text-primary">Flow</span></span>
+        </header>
+
+        <main class="flex-1 flex items-center justify-center px-4 pb-16">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-6">
+                    <p class="text-[13px] uppercase tracking-wide text-ink-mute">Tanzania SME financial operating system</p>
+                </div>
+                <div class="bg-canvas/95 backdrop-blur rounded-xl border border-hairline shadow-[0_8px_24px_rgba(0,55,112,0.08),0_2px_6px_rgba(0,55,112,0.04)] p-8">
+                    {{ $slot }}
+                </div>
+            </div>
+        </main>
     </div>
     @livewireScripts
 </body>

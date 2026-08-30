@@ -7,59 +7,84 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="bg-slate-50 text-slate-800">
-    <div class="flex min-h-screen">
-        <aside class="w-60 bg-emerald-800 text-emerald-50 flex-shrink-0">
-            <div class="px-5 py-5 text-lg font-bold border-b border-emerald-700">
-                DukaFlow
-            </div>
-            <nav class="p-3 space-y-1 text-sm">
-                <a href="{{ route('portal.dashboard') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.dashboard') ? 'bg-emerald-700' : '' }}">Dashboard</a>
-                <a href="{{ route('portal.sales.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.sales.*') ? 'bg-emerald-700' : '' }}">Sales</a>
-                <a href="{{ route('portal.expenses.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.expenses.*') ? 'bg-emerald-700' : '' }}">Expenses</a>
-                <a href="{{ route('portal.inventory.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.inventory.*') ? 'bg-emerald-700' : '' }}">Inventory</a>
-                <a href="{{ route('portal.suppliers.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.suppliers.*') ? 'bg-emerald-700' : '' }}">Suppliers</a>
-                <a href="{{ route('portal.payments.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.payments.*') ? 'bg-emerald-700' : '' }}">Payments</a>
-                <a href="{{ route('portal.kyc.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.kyc.*') ? 'bg-emerald-700' : '' }}">KYC Documents</a>
+<body class="bg-canvas-soft text-ink font-sans antialiased">
+    <div class="flex min-h-screen gap-4 p-4">
+        <aside class="w-60 shrink-0">
+            <div class="sticky top-4 bg-brand-dark rounded-xl p-4 flex flex-col h-[calc(100vh-2rem)]">
+                <div class="px-2 py-2 mb-4">
+                    <span class="text-[17px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
+                    <p class="text-[11px] text-white/40 mt-0.5 uppercase tracking-wide truncate">{{ auth()->user()->merchant?->business_name }}</p>
+                </div>
 
-                @if(config('dukaflow.credit_engine_enabled'))
-                    @can('apply-credit')
-                    <a href="{{ route('portal.credit.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.credit.*') ? 'bg-emerald-700' : '' }}">Working Capital</a>
+                <nav class="space-y-1 flex-1 overflow-y-auto">
+                    <a href="{{ route('portal.dashboard') }}" class="icon-dock-item {{ request()->routeIs('portal.dashboard') ? 'is-active' : '' }}">
+                        <x-icon.dashboard class="h-4 w-4 shrink-0" /> Dashboard
+                    </a>
+                    <a href="{{ route('portal.sales.index') }}" class="icon-dock-item {{ request()->routeIs('portal.sales.*') ? 'is-active' : '' }}">
+                        <x-icon.sales class="h-4 w-4 shrink-0" /> Sales
+                    </a>
+                    <a href="{{ route('portal.expenses.index') }}" class="icon-dock-item {{ request()->routeIs('portal.expenses.*') ? 'is-active' : '' }}">
+                        <x-icon.expenses class="h-4 w-4 shrink-0" /> Expenses
+                    </a>
+                    <a href="{{ route('portal.inventory.index') }}" class="icon-dock-item {{ request()->routeIs('portal.inventory.*') ? 'is-active' : '' }}">
+                        <x-icon.inventory class="h-4 w-4 shrink-0" /> Inventory
+                    </a>
+                    <a href="{{ route('portal.suppliers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.suppliers.*') ? 'is-active' : '' }}">
+                        <x-icon.suppliers class="h-4 w-4 shrink-0" /> Suppliers
+                    </a>
+                    <a href="{{ route('portal.payments.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payments.*') ? 'is-active' : '' }}">
+                        <x-icon.receipt class="h-4 w-4 shrink-0" /> Payments
+                    </a>
+                    <a href="{{ route('portal.kyc.index') }}" class="icon-dock-item {{ request()->routeIs('portal.kyc.*') ? 'is-active' : '' }}">
+                        <x-icon.shield class="h-4 w-4 shrink-0" /> KYC Documents
+                    </a>
+
+                    @if(config('dukaflow.credit_engine_enabled'))
+                        @can('apply-credit')
+                        <a href="{{ route('portal.credit.index') }}" class="icon-dock-item {{ request()->routeIs('portal.credit.*') ? 'is-active' : '' }}">
+                            <x-icon.credit class="h-4 w-4 shrink-0" /> Working Capital
+                        </a>
+                        @endcan
+                    @endif
+
+                    @can('manage-own-staff')
+                    <a href="{{ route('portal.staff.index') }}" class="icon-dock-item {{ request()->routeIs('portal.staff.*') ? 'is-active' : '' }}">
+                        <x-icon.users class="h-4 w-4 shrink-0" /> Staff
+                    </a>
                     @endcan
-                @endif
+                </nav>
 
-                @can('manage-own-staff')
-                <a href="{{ route('portal.staff.index') }}" class="block px-3 py-2 rounded hover:bg-emerald-700 {{ request()->routeIs('portal.staff.*') ? 'bg-emerald-700' : '' }}">Staff</a>
-                @endcan
-            </nav>
-        </aside>
-
-        <div class="flex-1 flex flex-col">
-            <header class="bg-white border-b px-6 py-3 flex items-center justify-between">
-                <h1 class="text-lg font-semibold">{{ $title ?? 'Dashboard' }}</h1>
-                <div class="flex items-center gap-4 text-sm">
-                    <span class="text-slate-500">{{ auth()->user()->merchant?->business_name }} · {{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
+                <div class="pt-3 mt-3 border-t border-white/10">
+                    <p class="px-2 text-[13px] text-white/80 truncate">{{ auth()->user()->name }}</p>
+                    <form method="POST" action="{{ route('logout') }}" class="mt-1">
                         @csrf
-                        <button class="text-rose-600 hover:underline">Log out</button>
+                        <button type="submit" class="icon-dock-item w-full text-left text-ruby/80 hover:text-ruby hover:bg-ruby/10">
+                            <x-icon.logout class="h-4 w-4 shrink-0" /> Log out
+                        </button>
                     </form>
                 </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 min-w-0">
+            <header class="flex items-center justify-between mb-6 px-1 pt-2">
+                <h1 class="text-[28px] font-light tracking-tight text-ink">{{ $title ?? 'Dashboard' }}</h1>
             </header>
 
-            <main class="flex-1 p-6">
-                @if(auth()->user()->merchant && auth()->user()->merchant->kyc_status !== \App\Models\Merchant::KYC_APPROVED)
-                    <div class="mb-4 rounded bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 text-sm">
-                        Your business verification is <strong>{{ str_replace('_', ' ', auth()->user()->merchant->kyc_status) }}</strong>.
-                        Upload your KYC documents to get fully verified. <a href="{{ route('portal.kyc.index') }}" class="underline">Go to KYC Documents</a>.
-                    </div>
-                @endif
+            @if(auth()->user()->merchant && auth()->user()->merchant->kyc_status !== \App\Models\Merchant::KYC_APPROVED)
+                <div class="mb-4 rounded-lg bg-canvas-cream border border-lemon/20 text-lemon px-4 py-2.5 text-[14px]">
+                    Your business verification is <strong>{{ str_replace('_', ' ', auth()->user()->merchant->kyc_status) }}</strong>.
+                    Upload your KYC documents to get fully verified. <a href="{{ route('portal.kyc.index') }}" class="underline">Go to KYC Documents</a>.
+                </div>
+            @endif
 
-                @if(session('status'))
-                    <div class="mb-4 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-2 text-sm">
-                        {{ session('status') }}
-                    </div>
-                @endif
+            @if(session('status'))
+                <div class="mb-4 rounded-lg bg-primary-subtle/30 border border-primary/20 text-primary-deep px-4 py-2.5 text-[14px]">
+                    {{ session('status') }}
+                </div>
+            @endif
 
+            <main class="pb-10">
                 {{ $slot }}
             </main>
         </div>

@@ -1,47 +1,40 @@
-<div>
-    <div class="mb-4">
-        <button wire:click="$toggle('showForm')" class="bg-emerald-700 text-white rounded px-3 py-1.5 text-sm hover:bg-emerald-800">
+<div class="space-y-4">
+    <div>
+        <x-ui.button wire:click="$toggle('showForm')" target="$toggle('showForm')">
             {{ $showForm ? 'Cancel' : '+ Add lead' }}
-        </button>
+        </x-ui.button>
     </div>
 
     @if($showForm)
-        <form wire:submit="create" class="bg-white border rounded-lg p-4 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Business name</label>
-                <input type="text" wire:model="business_name" class="w-full rounded border-slate-300 text-sm">
-                @error('business_name') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Contact name</label>
-                <input type="text" wire:model="contact_name" class="w-full rounded border-slate-300 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Phone</label>
-                <input type="text" wire:model="phone" class="w-full rounded border-slate-300 text-sm">
-            </div>
-            <button type="submit" class="bg-emerald-700 text-white rounded px-3 py-2 text-sm hover:bg-emerald-800">Save lead</button>
-        </form>
+        <x-ui.card>
+            <form wire:submit="create" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <x-ui.input wire:model="business_name" label="Business name" id="business_name" />
+                <x-ui.input wire:model="contact_name" label="Contact name" id="contact_name" />
+                <x-ui.input wire:model="phone" label="Phone" id="phone" />
+                <x-ui.button type="submit" target="create">Save lead</x-ui.button>
+            </form>
+            @error('business_name') <p class="text-ruby text-[12px] mt-2">{{ $message }}</p> @enderror
+        </x-ui.card>
     @endif
 
-    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+    <x-ui.card padding="p-0">
+        <table class="w-full text-[13px]">
+            <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
                 <tr>
-                    <th class="px-4 py-2">Business</th>
-                    <th class="px-4 py-2">Contact</th>
-                    <th class="px-4 py-2">Agent</th>
-                    <th class="px-4 py-2">Status</th>
+                    <th class="px-5 py-3 font-normal">Business</th>
+                    <th class="px-5 py-3 font-normal">Contact</th>
+                    <th class="px-5 py-3 font-normal">Agent</th>
+                    <th class="px-5 py-3 font-normal">Status</th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-hairline">
                 @forelse($leads as $lead)
-                    <tr>
-                        <td class="px-4 py-2 font-medium">{{ $lead->business_name }}</td>
-                        <td class="px-4 py-2">{{ $lead->contact_name }} {{ $lead->phone }}</td>
-                        <td class="px-4 py-2">{{ $lead->agent?->name }}</td>
-                        <td class="px-4 py-2">
-                            <select wire:change="updateStatus({{ $lead->id }}, $event.target.value)" class="text-xs rounded border-slate-300">
+                    <tr class="hover:bg-canvas-soft/60">
+                        <td class="px-5 py-3 text-ink font-medium">{{ $lead->business_name }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $lead->contact_name }} {{ $lead->phone }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $lead->agent?->name }}</td>
+                        <td class="px-5 py-3">
+                            <select wire:change="updateStatus({{ $lead->id }}, $event.target.value)" class="text-[12px] rounded-sm border border-hairline-input px-2 py-1">
                                 @foreach(['new','contacted','onboarding','converted','lost'] as $status)
                                     <option value="{{ $status }}" @selected($lead->status === $status)>{{ ucfirst($status) }}</option>
                                 @endforeach
@@ -49,9 +42,9 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400">No leads yet.</td></tr>
+                    <tr><td colspan="4" class="px-5 py-8 text-center text-ink-mute">No leads yet.</td></tr>
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </x-ui.card>
 </div>

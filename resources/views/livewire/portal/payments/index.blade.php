@@ -1,64 +1,52 @@
-<div class="space-y-6">
-    <form wire:submit="save" class="bg-white border rounded-lg p-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
-        <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Amount (TZS)</label>
-            <input type="number" step="0.01" wire:model="amount" class="w-full rounded border-slate-300 text-sm">
-            @error('amount') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Payer name</label>
-            <input type="text" wire:model="payer_name" class="w-full rounded border-slate-300 text-sm">
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Date</label>
-            <input type="date" wire:model="payment_date" class="w-full rounded border-slate-300 text-sm">
-        </div>
-        <div class="md:col-span-2">
-            <label class="block text-xs font-medium text-slate-600 mb-1">Proof of payment (photo/receipt)</label>
-            <input type="file" wire:model="proof" class="w-full text-sm">
-            @error('proof') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-            <div wire:loading wire:target="proof" class="text-xs text-slate-400 mt-1">Uploading…</div>
-        </div>
-        <button type="submit" class="bg-emerald-700 text-white rounded px-3 py-2 text-sm hover:bg-emerald-800">Record payment</button>
-    </form>
+<div class="space-y-4">
+    <x-ui.card>
+        <form wire:submit="save" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            <x-ui.input type="number" step="0.01" wire:model="amount" label="Amount (TZS)" id="payment_amount" />
+            <x-ui.input wire:model="payer_name" label="Payer name" id="payer_name" />
+            <x-ui.input type="date" wire:model="payment_date" label="Date" id="payment_date" />
+            <div class="md:col-span-2">
+                <label class="block text-[13px] text-ink-mute mb-1.5">Proof of payment (photo/receipt)</label>
+                <input type="file" wire:model="proof" class="w-full text-[13px] text-ink-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-pill file:border-0 file:text-[12px] file:bg-primary-subtle/40 file:text-primary-deep">
+                @error('proof') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                <div wire:loading wire:target="proof" class="text-[12px] text-ink-mute mt-1">Uploading…</div>
+            </div>
+            <x-ui.button type="submit" target="save">Record payment</x-ui.button>
+        </form>
+        @error('amount') <p class="text-ruby text-[12px] mt-2">{{ $message }}</p> @enderror
+    </x-ui.card>
 
-    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+    <x-ui.card padding="p-0">
+        <table class="w-full text-[13px]">
+            <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
                 <tr>
-                    <th class="px-4 py-2">Date</th>
-                    <th class="px-4 py-2">Amount</th>
-                    <th class="px-4 py-2">Payer</th>
-                    <th class="px-4 py-2">Proof</th>
-                    <th class="px-4 py-2">Status</th>
+                    <th class="px-5 py-3 font-normal">Date</th>
+                    <th class="px-5 py-3 font-normal">Amount</th>
+                    <th class="px-5 py-3 font-normal">Payer</th>
+                    <th class="px-5 py-3 font-normal">Proof</th>
+                    <th class="px-5 py-3 font-normal">Status</th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-hairline">
                 @forelse($payments as $payment)
-                    <tr>
-                        <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
-                        <td class="px-4 py-2">TZS {{ number_format($payment->amount, 0) }}</td>
-                        <td class="px-4 py-2">{{ $payment->payer_name ?: '—' }}</td>
-                        <td class="px-4 py-2">
+                    <tr class="hover:bg-canvas-soft/60">
+                        <td class="px-5 py-3 text-ink-secondary">{{ $payment->payment_date->format('d M Y') }}</td>
+                        <td class="px-5 py-3 tnum text-ink font-medium">TZS {{ number_format($payment->amount, 0) }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $payment->payer_name ?: '—' }}</td>
+                        <td class="px-5 py-3">
                             @if($payment->proofOfPayment())
-                                <a href="{{ $payment->proofOfPayment()->getUrl() }}" target="_blank" class="text-emerald-700 underline">view</a>
+                                <a href="{{ $payment->proofOfPayment()->getUrl() }}" target="_blank" class="text-primary hover:text-primary-deep">view</a>
                             @endif
                         </td>
-                        <td class="px-4 py-2">
-                            <span @class([
-                                'px-2 py-0.5 rounded text-xs font-medium',
-                                'bg-emerald-100 text-emerald-700' => $payment->status === 'verified',
-                                'bg-amber-100 text-amber-700' => $payment->status === 'recorded',
-                                'bg-rose-100 text-rose-700' => $payment->status === 'flagged',
-                            ])>{{ $payment->status }}</span>
+                        <td class="px-5 py-3">
+                            <x-ui.badge :tone="$payment->status === 'verified' ? 'success' : ($payment->status === 'flagged' ? 'danger' : 'warning')">{{ $payment->status }}</x-ui.badge>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">No payments recorded yet.</td></tr>
+                    <tr><td colspan="5" class="px-5 py-8 text-center text-ink-mute">No payments recorded yet.</td></tr>
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </x-ui.card>
 
     <div>{{ $payments->links() }}</div>
 </div>

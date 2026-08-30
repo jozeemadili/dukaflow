@@ -1,67 +1,63 @@
-<div class="space-y-6">
-    <div class="bg-white rounded-lg shadow-sm border p-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div><p class="text-slate-500">Business</p><p class="font-medium">{{ $merchant->business_name }}</p></div>
-        <div><p class="text-slate-500">Owner</p><p class="font-medium">{{ $merchant->owner_name }}</p></div>
-        <div><p class="text-slate-500">Phone</p><p class="font-medium">{{ $merchant->phone }}</p></div>
-        <div><p class="text-slate-500">Email</p><p class="font-medium">{{ $merchant->email ?: '—' }}</p></div>
-        <div><p class="text-slate-500">Business type</p><p class="font-medium">{{ $merchant->business_type ?: '—' }}</p></div>
-        <div><p class="text-slate-500">Region / City</p><p class="font-medium">{{ $merchant->region }} {{ $merchant->city }}</p></div>
-        <div><p class="text-slate-500">TIN</p><p class="font-medium">{{ $merchant->tin_number ?: '—' }}</p></div>
-        <div><p class="text-slate-500">Subscription tier</p><p class="font-medium capitalize">{{ $merchant->subscription_tier }}</p></div>
-    </div>
+<div class="space-y-4">
+    <x-ui.card>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5 text-[13px]">
+            <div><p class="text-ink-mute mb-1">Business</p><p class="text-ink font-medium">{{ $merchant->business_name }}</p></div>
+            <div><p class="text-ink-mute mb-1">Owner</p><p class="text-ink font-medium">{{ $merchant->owner_name }}</p></div>
+            <div><p class="text-ink-mute mb-1">Phone</p><p class="text-ink font-medium tnum">{{ $merchant->phone }}</p></div>
+            <div><p class="text-ink-mute mb-1">Email</p><p class="text-ink font-medium">{{ $merchant->email ?: '—' }}</p></div>
+            <div><p class="text-ink-mute mb-1">Business type</p><p class="text-ink font-medium">{{ $merchant->business_type ?: '—' }}</p></div>
+            <div><p class="text-ink-mute mb-1">Region / City</p><p class="text-ink font-medium">{{ $merchant->region }} {{ $merchant->city }}</p></div>
+            <div><p class="text-ink-mute mb-1">TIN</p><p class="text-ink font-medium tnum">{{ $merchant->tin_number ?: '—' }}</p></div>
+            <div><p class="text-ink-mute mb-1">Subscription tier</p><p class="text-ink font-medium capitalize">{{ $merchant->subscription_tier }}</p></div>
+        </div>
+    </x-ui.card>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white rounded-lg shadow-sm border p-4">
-            <p class="text-xs text-slate-500 uppercase">Total recorded sales</p>
-            <p class="text-xl font-bold mt-1">TZS {{ number_format($salesTotal, 0) }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border p-4">
-            <p class="text-xs text-slate-500 uppercase">Total recorded expenses</p>
-            <p class="text-xl font-bold mt-1">TZS {{ number_format($expensesTotal, 0) }}</p>
-        </div>
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Total recorded sales" value="TZS {{ number_format($salesTotal, 0) }}" tone="primary" />
+        </x-ui.card>
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Total recorded expenses" value="TZS {{ number_format($expensesTotal, 0) }}" tone="ruby" />
+        </x-ui.card>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border p-5">
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="font-semibold">KYC Review</h2>
-            <span @class([
-                'px-2 py-0.5 rounded text-xs font-medium',
-                'bg-emerald-100 text-emerald-700' => $merchant->kyc_status === 'approved',
-                'bg-amber-100 text-amber-700' => in_array($merchant->kyc_status, ['pending', 'under_review']),
-                'bg-rose-100 text-rose-700' => $merchant->kyc_status === 'rejected',
-            ])>{{ str_replace('_', ' ', $merchant->kyc_status) }}</span>
+    <x-ui.card>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[15px] text-ink-secondary">KYC Review</h2>
+            <x-ui.badge :tone="$merchant->kyc_status === 'approved' ? 'success' : ($merchant->kyc_status === 'rejected' ? 'danger' : 'warning')">
+                {{ str_replace('_', ' ', $merchant->kyc_status) }}
+            </x-ui.badge>
         </div>
 
-        <h3 class="text-sm font-medium text-slate-600 mb-2">Submitted documents</h3>
-        <div class="space-y-2 mb-4">
+        <h3 class="text-[13px] text-ink-mute mb-2">Submitted documents</h3>
+        <div class="space-y-2 mb-5">
             @forelse($documents as $doc)
-                <div class="flex items-center justify-between border rounded px-3 py-2 text-sm">
-                    <div>
-                        <span class="font-medium capitalize">{{ str_replace('_', ' ', $doc->document_type) }}</span>
-                        <span class="text-slate-400 ml-2">{{ $doc->status }}</span>
+                <div class="flex items-center justify-between border border-hairline rounded-md px-3.5 py-2.5 text-[13px]">
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-ink capitalize">{{ str_replace('_', ' ', $doc->document_type) }}</span>
+                        <x-ui.badge :tone="$doc->status === 'approved' ? 'success' : ($doc->status === 'rejected' ? 'danger' : 'neutral')">{{ $doc->status }}</x-ui.badge>
                         @if($doc->file())
-                            <a href="{{ $doc->file()->getUrl() }}" target="_blank" class="text-emerald-700 underline ml-2">view file</a>
+                            <a href="{{ $doc->file()->getUrl() }}" target="_blank" class="text-primary hover:text-primary-deep">view file</a>
                         @endif
                     </div>
                     @if($doc->status === 'pending')
                         <div class="flex gap-2">
-                            <button wire:click="approveDocument({{ $doc->id }})" class="text-emerald-700 text-xs hover:underline">Approve</button>
-                            <button wire:click="rejectDocument({{ $doc->id }})" class="text-rose-600 text-xs hover:underline">Reject</button>
+                            <x-ui.button size="sm" variant="secondary" wire:click="approveDocument({{ $doc->id }})" target="approveDocument({{ $doc->id }})">Approve</x-ui.button>
+                            <x-ui.button size="sm" variant="danger" wire:click="rejectDocument({{ $doc->id }})" target="rejectDocument({{ $doc->id }})">Reject</x-ui.button>
                         </div>
                     @endif
                 </div>
             @empty
-                <p class="text-sm text-slate-400">No documents submitted yet.</p>
+                <p class="text-[13px] text-ink-mute">No documents submitted yet.</p>
             @endforelse
         </div>
 
-        <label class="block text-sm font-medium text-slate-600 mb-1">Review notes</label>
-        <textarea wire:model="reviewNotes" rows="2" class="w-full rounded border-slate-300 text-sm mb-3"></textarea>
+        <x-ui.textarea wire:model="reviewNotes" label="Review notes" rows="2" class="mb-4"></x-ui.textarea>
 
         <div class="flex gap-2">
-            <button wire:click="markUnderReview" class="border rounded px-3 py-1.5 text-sm hover:bg-slate-50">Mark under review</button>
-            <button wire:click="approveKyc" class="bg-emerald-700 text-white rounded px-3 py-1.5 text-sm hover:bg-emerald-800">Approve merchant</button>
-            <button wire:click="rejectKyc" class="bg-rose-600 text-white rounded px-3 py-1.5 text-sm hover:bg-rose-700">Reject merchant</button>
+            <x-ui.button variant="secondary" wire:click="markUnderReview" target="markUnderReview">Mark under review</x-ui.button>
+            <x-ui.button variant="primary" wire:click="approveKyc" target="approveKyc">Approve merchant</x-ui.button>
+            <x-ui.button variant="danger" wire:click="rejectKyc" target="rejectKyc">Reject merchant</x-ui.button>
         </div>
-    </div>
+    </x-ui.card>
 </div>

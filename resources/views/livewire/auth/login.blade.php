@@ -1,25 +1,19 @@
 <div>
-    <h2 class="text-lg font-semibold mb-4">Sign in</h2>
+    <h2 class="text-[22px] font-light text-ink tracking-tight mb-6">Sign in</h2>
 
     <form wire:submit="login" class="space-y-4">
-        <div>
-            <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
-            <input type="email" wire:model="email" class="w-full rounded border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" autofocus>
-            @error('email') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
+        <x-ui.input type="email" wire:model="email" label="Email" autofocus id="email" />
+        @error('email') <p class="text-ruby text-[12px] -mt-3">{{ $message }}</p> @enderror
 
-        <div>
-            <label class="block text-sm font-medium text-slate-600 mb-1">Password</label>
-            <input type="password" wire:model="password" class="w-full rounded border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-            @error('password') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-        </div>
+        <x-ui.input type="password" wire:model="password" label="Password" id="password" />
+        @error('password') <p class="text-ruby text-[12px] -mt-3">{{ $message }}</p> @enderror
 
-        <button type="submit" class="w-full bg-emerald-700 text-white rounded py-2 font-medium hover:bg-emerald-800">
+        <x-ui.button type="submit" target="login" class="w-full">
             Sign in
-        </button>
+        </x-ui.button>
     </form>
 
-    <p class="text-sm text-slate-500 mt-4 text-center">
-        New merchant? <a href="{{ route('register') }}" class="text-emerald-700 underline">Register your business</a>
+    <p class="text-[13px] text-ink-mute mt-6 text-center">
+        New merchant? <a href="{{ route('register') }}" class="text-primary hover:text-primary-deep">Register your business</a>
     </p>
 </div>

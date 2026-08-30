@@ -1,6 +1,6 @@
-<div>
-    <div class="mb-4">
-        <select wire:model.live="statusFilter" class="rounded border-slate-300 text-sm">
+<div class="space-y-4">
+    <div>
+        <select wire:model.live="statusFilter" class="rounded-sm border border-hairline-input bg-canvas text-[14px] px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
             <option value="">All statuses</option>
             <option value="recorded">Awaiting verification</option>
             <option value="verified">Verified</option>
@@ -8,56 +8,51 @@
         </select>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+    <x-ui.card padding="p-0">
+        <table class="w-full text-[13px]">
+            <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
                 <tr>
-                    <th class="px-4 py-2">Merchant</th>
-                    <th class="px-4 py-2">Amount</th>
-                    <th class="px-4 py-2">Payer</th>
-                    <th class="px-4 py-2">Date</th>
-                    <th class="px-4 py-2">Proof</th>
-                    <th class="px-4 py-2">Status</th>
-                    <th class="px-4 py-2"></th>
+                    <th class="px-5 py-3 font-normal">Merchant</th>
+                    <th class="px-5 py-3 font-normal">Amount</th>
+                    <th class="px-5 py-3 font-normal">Payer</th>
+                    <th class="px-5 py-3 font-normal">Date</th>
+                    <th class="px-5 py-3 font-normal">Proof</th>
+                    <th class="px-5 py-3 font-normal">Status</th>
+                    <th class="px-5 py-3"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-hairline">
                 @forelse($payments as $payment)
-                    <tr>
-                        <td class="px-4 py-2 font-medium">{{ $payment->merchant->business_name }}</td>
-                        <td class="px-4 py-2">TZS {{ number_format($payment->amount, 0) }}</td>
-                        <td class="px-4 py-2">{{ $payment->payer_name ?: '—' }}</td>
-                        <td class="px-4 py-2">{{ $payment->payment_date->format('d M Y') }}</td>
-                        <td class="px-4 py-2">
+                    <tr class="hover:bg-canvas-soft/60">
+                        <td class="px-5 py-3 text-ink font-medium">{{ $payment->merchant->business_name }}</td>
+                        <td class="px-5 py-3 tnum text-ink">TZS {{ number_format($payment->amount, 0) }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $payment->payer_name ?: '—' }}</td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $payment->payment_date->format('d M Y') }}</td>
+                        <td class="px-5 py-3">
                             @if($payment->proofOfPayment())
-                                <a href="{{ $payment->proofOfPayment()->getUrl() }}" target="_blank" class="text-emerald-700 underline">view</a>
+                                <a href="{{ $payment->proofOfPayment()->getUrl() }}" target="_blank" class="text-primary hover:text-primary-deep">view</a>
                             @else
-                                <span class="text-rose-500 text-xs">missing</span>
+                                <span class="text-ruby text-[12px]">missing</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2">
-                            <span @class([
-                                'px-2 py-0.5 rounded text-xs font-medium',
-                                'bg-emerald-100 text-emerald-700' => $payment->status === 'verified',
-                                'bg-amber-100 text-amber-700' => $payment->status === 'recorded',
-                                'bg-rose-100 text-rose-700' => $payment->status === 'flagged',
-                            ])>{{ $payment->status }}</span>
+                        <td class="px-5 py-3">
+                            <x-ui.badge :tone="$payment->status === 'verified' ? 'success' : ($payment->status === 'flagged' ? 'danger' : 'warning')">{{ $payment->status }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-2 text-right whitespace-nowrap">
+                        <td class="px-5 py-3 text-right whitespace-nowrap">
                             @if($payment->status !== 'verified')
-                                <button wire:click="verify({{ $payment->id }})" class="text-emerald-700 text-xs hover:underline mr-2">Verify</button>
+                                <x-ui.button size="sm" variant="secondary" wire:click="verify({{ $payment->id }})" target="verify({{ $payment->id }})" class="mr-2">Verify</x-ui.button>
                             @endif
                             @if($payment->status !== 'flagged')
-                                <button wire:click="flag({{ $payment->id }})" class="text-rose-600 text-xs hover:underline">Flag</button>
+                                <x-ui.button size="sm" variant="danger" wire:click="flag({{ $payment->id }})" target="flag({{ $payment->id }})">Flag</x-ui.button>
                             @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">No payments in this view.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-8 text-center text-ink-mute">No payments in this view.</td></tr>
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </x-ui.card>
 
-    <div class="mt-4">{{ $payments->links() }}</div>
+    <div>{{ $payments->links() }}</div>
 </div>
