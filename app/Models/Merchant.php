@@ -36,11 +36,20 @@ class Merchant extends Model
 
     public const KYC_REJECTED = 'rejected';
 
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_SUSPENDED = 'suspended';
+
     protected function casts(): array
     {
         return [
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 
     public function users(): HasMany

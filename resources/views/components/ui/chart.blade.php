@@ -5,6 +5,11 @@
     x-data="{
         chart: null,
         init() {
+            const existing = Chart.getChart(this.$refs.canvas);
+            if (existing) {
+                existing.destroy();
+            }
+
             this.chart = new Chart(this.$refs.canvas, {
                 type: @js($type),
                 data: {

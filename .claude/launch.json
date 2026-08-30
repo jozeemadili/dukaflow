@@ -5,7 +5,7 @@
             "name": "dukaflow",
             "runtimeExecutable": "php",
             "runtimeArgs": ["artisan", "dev", "--inline"],
-            "port": 8000
+            "port": 8001
         }
     ]
 }

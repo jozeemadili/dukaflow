@@ -28,10 +28,18 @@ class Login extends Component
             ]);
         }
 
-        request()->session()->regenerate();
-
         /** @var User $user */
         $user = Auth::user();
+
+        if ($user->isMerchantUser() && $user->merchant && ! $user->merchant->isActive()) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This shop account has been deactivated. Contact DukaFlow support.',
+            ]);
+        }
+
+        request()->session()->regenerate();
 
         return $this->redirect($user->isInternal() ? route('admin.dashboard') : route('portal.dashboard'), navigate: true);
     }

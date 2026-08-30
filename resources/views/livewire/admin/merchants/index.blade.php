@@ -8,6 +8,7 @@
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
         </select>
+        <a href="{{ route('admin.merchants.create') }}" class="inline-flex items-center justify-center gap-2 rounded-pill font-normal leading-none transition bg-primary text-white hover:bg-primary-deep px-4 py-2 text-[15px] whitespace-nowrap">+ New merchant</a>
     </div>
 
     <x-ui.card padding="p-0">
@@ -18,6 +19,7 @@
                     <th class="px-5 py-3 font-normal">Owner</th>
                     <th class="px-5 py-3 font-normal">Region</th>
                     <th class="px-5 py-3 font-normal">KYC status</th>
+                    <th class="px-5 py-3 font-normal">Account</th>
                     <th class="px-5 py-3 font-normal">Tier</th>
                     <th class="px-5 py-3"></th>
                 </tr>
@@ -33,13 +35,16 @@
                                 {{ str_replace('_', ' ', $merchant->kyc_status) }}
                             </x-ui.badge>
                         </td>
+                        <td class="px-5 py-3">
+                            <x-ui.badge :tone="$merchant->status === 'active' ? 'success' : 'danger'">{{ $merchant->status }}</x-ui.badge>
+                        </td>
                         <td class="px-5 py-3 text-ink-secondary capitalize">{{ $merchant->subscription_tier }}</td>
                         <td class="px-5 py-3 text-right">
                             <a href="{{ route('admin.merchants.show', $merchant) }}" class="text-primary hover:text-primary-deep">View</a>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-5 py-8 text-center text-ink-mute">No merchants found.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-8 text-center text-ink-mute">No merchants found.</td></tr>
                 @endforelse
             </tbody>
         </table>

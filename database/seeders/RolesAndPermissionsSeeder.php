@@ -44,6 +44,14 @@ class RolesAndPermissionsSeeder extends Seeder
 
         'merchant_owner' => ['manage-own-business', 'manage-own-staff', 'apply-credit'],
         'merchant_staff' => ['manage-own-business'],
+
+        // Roles a shop owner assigns to their own staff. All share the same
+        // coarse permission for now — split into finer-grained module
+        // permissions once per-role activity scopes are defined.
+        'merchant_manager' => ['manage-own-business'],
+        'merchant_supervisor' => ['manage-own-business'],
+        'merchant_sales' => ['manage-own-business'],
+        'merchant_accountant' => ['manage-own-business'],
     ];
 
     public function run(): void

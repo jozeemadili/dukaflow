@@ -11,11 +11,20 @@ use Livewire\Component;
 #[Layout('layouts.portal', ['title' => 'Staff'])]
 class Index extends Component
 {
+    public const ROLES = [
+        'merchant_manager' => 'Manager',
+        'merchant_supervisor' => 'Supervisor',
+        'merchant_sales' => 'Sales',
+        'merchant_accountant' => 'Accountant',
+    ];
+
     public string $name = '';
 
     public string $email = '';
 
     public string $phone = '';
+
+    public string $role = 'merchant_sales';
 
     public bool $showForm = false;
 
@@ -30,6 +39,7 @@ class Index extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
+            'role' => ['required', 'in:'.implode(',', array_keys(self::ROLES))],
         ]);
 
         $user = User::create([
@@ -41,10 +51,24 @@ class Index extends Component
             'merchant_id' => Auth::user()->merchant_id,
         ]);
 
-        $user->assignRole('merchant_staff');
+        $user->assignRole($this->role);
 
         $this->reset(['name', 'email', 'phone', 'showForm']);
-        session()->flash('status', "Staff account created for {$user->name}. They should use 'forgot password' to set their own password.");
+        $this->role = 'merchant_sales';
+        session()->flash('status', "Staff account created for {$user->name}. Share their email so they can use \"Forgot password?\" on the sign-in page to set their password.");
+    }
+
+    public function updateRole(int $userId, string $role): void
+    {
+        if (! array_key_exists($role, self::ROLES)) {
+            return;
+        }
+
+        $user = User::where('merchant_id', Auth::user()->merchant_id)
+            ->where('id', '!=', Auth::id())
+            ->findOrFail($userId);
+
+        $user->syncRoles([$role]);
     }
 
     public function render()
@@ -52,8 +76,10 @@ class Index extends Component
         return view('livewire.portal.staff.index', [
             'staff' => User::where('merchant_id', Auth::user()->merchant_id)
                 ->where('id', '!=', Auth::id())
+                ->with('roles')
                 ->latest()
                 ->get(),
+            'roles' => self::ROLES,
         ]);
     }
 }

@@ -8,6 +8,10 @@
         <x-ui.input type="password" wire:model="password" label="Password" id="password" />
         @error('password') <p class="text-ruby text-[12px] -mt-3">{{ $message }}</p> @enderror
 
+        <div class="text-right -mt-1">
+            <a href="{{ route('password.request') }}" class="text-[12px] text-primary hover:text-primary-deep">Forgot password?</a>
+        </div>
+
         <x-ui.button type="submit" target="login" class="w-full">
             Sign in
         </x-ui.button>

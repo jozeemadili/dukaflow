@@ -1,8 +1,10 @@
 <?php
 
 use App\Livewire\Admin;
+use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Portal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +20,8 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
+    Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
 });
 
 Route::post('/logout', function () {
@@ -32,6 +36,7 @@ Route::middleware(['auth', 'internal'])->prefix('admin')->name('admin.')->group(
     Route::get('/', Admin\Dashboard::class)->name('dashboard');
 
     Route::get('/merchants', Admin\Merchants\Index::class)->name('merchants.index');
+    Route::get('/merchants/create', Admin\Merchants\Create::class)->name('merchants.create');
     Route::get('/merchants/{merchant}', Admin\Merchants\Show::class)->name('merchants.show');
 
     Route::get('/kyc', Admin\Kyc\Index::class)->name('kyc.index');
