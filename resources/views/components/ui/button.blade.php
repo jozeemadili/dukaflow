@@ -3,6 +3,7 @@
     'type' => 'button',
     'target' => null,
     'size' => 'md',
+    'disabled' => false,
 ])
 
 @php
@@ -29,6 +30,7 @@
     wire:loading.attr="disabled"
     wire:loading.class="cursor-wait"
     @if($target) wire:target="{{ $target }}" @endif
+    @if($disabled) disabled @endif
 >
     <svg
         wire:loading

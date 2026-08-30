@@ -20,6 +20,9 @@
                     <a href="{{ route('portal.dashboard') }}" class="icon-dock-item {{ request()->routeIs('portal.dashboard') ? 'is-active' : '' }}">
                         <x-icon.dashboard class="h-4 w-4 shrink-0" /> Dashboard
                     </a>
+                    <a href="{{ route('portal.pos.index') }}" class="icon-dock-item {{ request()->routeIs('portal.pos.*') ? 'is-active' : '' }}">
+                        <x-icon.pos class="h-4 w-4 shrink-0" /> Point of Sale
+                    </a>
                     <a href="{{ route('portal.sales.index') }}" class="icon-dock-item {{ request()->routeIs('portal.sales.*') ? 'is-active' : '' }}">
                         <x-icon.sales class="h-4 w-4 shrink-0" /> Sales
                     </a>

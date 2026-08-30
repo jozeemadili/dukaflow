@@ -45,6 +45,7 @@ Route::middleware(['auth', 'internal'])->prefix('admin')->name('admin.')->group(
 Route::middleware(['auth', 'merchant'])->prefix('portal')->name('portal.')->group(function () {
     Route::get('/', Portal\Dashboard::class)->name('dashboard');
 
+    Route::get('/pos', Portal\Pos\Index::class)->name('pos.index');
     Route::get('/sales', Portal\Sales\Index::class)->name('sales.index');
     Route::get('/expenses', Portal\Expenses\Index::class)->name('expenses.index');
     Route::get('/inventory', Portal\Inventory\Index::class)->name('inventory.index');

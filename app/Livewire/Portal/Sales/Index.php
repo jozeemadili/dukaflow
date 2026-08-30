@@ -21,9 +21,16 @@ class Index extends Component
 
     public string $sale_date;
 
+    public ?int $expandedSaleId = null;
+
     public function mount()
     {
         $this->sale_date = now()->toDateString();
+    }
+
+    public function toggleExpand(int $saleId): void
+    {
+        $this->expandedSaleId = $this->expandedSaleId === $saleId ? null : $saleId;
     }
 
     public function save()
@@ -51,7 +58,9 @@ class Index extends Component
     public function render()
     {
         $sales = SalesRecord::where('merchant_id', Auth::user()->merchant_id)
+            ->withCount('items')
             ->latest('sale_date')
+            ->latest('id')
             ->paginate(15);
 
         return view('livewire.portal.sales.index', compact('sales'));
