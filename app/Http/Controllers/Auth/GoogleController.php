@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
@@ -19,8 +20,10 @@ class GoogleController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-        } catch (\Throwable) {
-            return redirect()->route('login')->with('status', 'Google sign-in failed. Please try again.');
+        } catch (\Throwable $e) {
+            Log::error('Google sign-in failed', ['message' => $e->getMessage(), 'class' => get_class($e)]);
+
+            return redirect()->route('login')->withErrors(['email' => 'Google sign-in failed. Please try again.']);
         }
 
         $user = User::where('google_id', $googleUser->getId())
