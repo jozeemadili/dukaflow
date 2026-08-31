@@ -40,6 +40,9 @@
                     <a href="{{ route('portal.suppliers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.suppliers.*') ? 'is-active' : '' }}">
                         <x-icon.suppliers class="h-4 w-4 shrink-0" /> Suppliers
                     </a>
+                    <a href="{{ route('portal.stores.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stores.*') ? 'is-active' : '' }}">
+                        <x-icon.store class="h-4 w-4 shrink-0" /> Stores
+                    </a>
                     <a href="{{ route('portal.customers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.customers.*') ? 'is-active' : '' }}">
                         <x-icon.customer class="h-4 w-4 shrink-0" /> Customers
                     </a>

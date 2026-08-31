@@ -8,14 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[Fillable([
     'merchant_id', 'supplier_id', 'reference_no', 'status', 'total_amount',
     'receipt_date', 'notes', 'created_by', 'approved_by', 'approved_at',
 ])]
-class StockReceipt extends Model
+class StockReceipt extends Model implements HasMedia
 {
     use LogsActivity;
+    use InteractsWithMedia;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documents');
+    }
 
     public const STATUS_PENDING = 'pending';
 

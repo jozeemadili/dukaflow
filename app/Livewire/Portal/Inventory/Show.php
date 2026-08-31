@@ -7,6 +7,7 @@ use App\Models\StockReceiptItem;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Picqer\Barcode\BarcodeGeneratorSVG;
 
 #[Layout('layouts.portal', ['title' => 'Product Detail'])]
 class Show extends Component
@@ -16,7 +17,22 @@ class Show extends Component
     public function mount(InventoryItem $item)
     {
         abort_unless($item->merchant_id === Auth::user()->merchant_id, 403);
-        $this->item = $item;
+        $this->item = $item->load('branch', 'category');
+    }
+
+    public function barcodeSvg(): ?string
+    {
+        if (! $this->item->barcode) {
+            return null;
+        }
+
+        try {
+            $generator = new BarcodeGeneratorSVG();
+
+            return $generator->getBarcode($this->item->barcode, $generator::TYPE_CODE_128);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function render()

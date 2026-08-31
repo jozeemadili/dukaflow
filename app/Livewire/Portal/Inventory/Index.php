@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Portal\Inventory;
 
+use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
@@ -10,11 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 #[Layout('layouts.portal', ['title' => 'Inventory'])]
 class Index extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
     public bool $showItemForm = false;
 
@@ -32,6 +35,10 @@ class Index extends Component
     public bool $addingNewCategory = false;
 
     public string $newCategoryName = '';
+
+    public string $branch_id = '';
+
+    public string $expiry_date = '';
 
     public string $unit = '';
 
@@ -76,9 +83,14 @@ class Index extends Component
 
     public function useExistingItem(int $itemId): void
     {
-        $this->reset(['name', 'sku', 'barcode', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
+        $this->reset(['name', 'sku', 'barcode', 'branch_id', 'expiry_date', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
         $this->reorder_level = '0';
         $this->startMovement($itemId);
+    }
+
+    public function generateBarcode(): void
+    {
+        $this->barcode = InventoryItem::generateUniqueBarcode();
     }
 
     public function updatedCategoryId(string $value): void
@@ -103,6 +115,7 @@ class Index extends Component
     public function filterByCategory(?int $categoryId): void
     {
         $this->categoryFilter = $categoryId ? (string) $categoryId : '';
+        $this->resetPage();
     }
 
     public function addItem()
@@ -110,6 +123,9 @@ class Index extends Component
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable'],
+            'branch_id' => ['nullable'],
+            'expiry_date' => ['nullable', 'date'],
+            'barcode' => ['nullable', 'string', 'max:64', 'unique:inventory_items,barcode'],
             'reorder_level' => ['required', 'numeric', 'min:0'],
             'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
@@ -119,6 +135,7 @@ class Index extends Component
         $item = InventoryItem::create([
             'merchant_id' => Auth::user()->merchant_id,
             'category_id' => $this->category_id && $this->category_id !== '__new__' ? $this->category_id : null,
+            'branch_id' => $this->branch_id ?: null,
             'name' => $this->name,
             'sku' => $this->sku ?: null,
             'barcode' => $this->barcode ?: null,
@@ -126,6 +143,7 @@ class Index extends Component
             'reorder_level' => $this->reorder_level,
             'unit_cost' => $this->unit_cost ?: null,
             'unit_price' => $this->unit_price ?: null,
+            'expiry_date' => $this->expiry_date ?: null,
         ]);
 
         if ($this->image) {
@@ -134,7 +152,7 @@ class Index extends Component
                 ->toMediaCollection('image');
         }
 
-        $this->reset(['name', 'sku', 'barcode', 'category_id', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
+        $this->reset(['name', 'sku', 'barcode', 'category_id', 'branch_id', 'expiry_date', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
         $this->reorder_level = '0';
         session()->flash('status', 'Inventory item added.');
     }
@@ -179,13 +197,22 @@ class Index extends Component
 
         $items = InventoryItem::where('merchant_id', $merchantId)
             ->when($this->categoryFilter, fn ($q) => $q->where('category_id', $this->categoryFilter))
-            ->with('category')
+            ->with(['category', 'branch'])
             ->orderBy('name')
+            ->paginate(10);
+
+        $expiringSoon = InventoryItem::where('merchant_id', $merchantId)
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<=', now()->addMonth())
+            ->whereDate('expiry_date', '>=', now())
+            ->orderBy('expiry_date')
             ->get();
 
         return view('livewire.portal.inventory.index', [
             'items' => $items,
             'categories' => InventoryCategory::where('merchant_id', $merchantId)->withCount('items')->orderBy('name')->get(),
+            'branches' => Branch::where('merchant_id', $merchantId)->orderBy('name')->get(),
+            'expiringSoon' => $expiringSoon,
         ]);
     }
 }

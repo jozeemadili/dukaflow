@@ -494,6 +494,7 @@ class Index extends Component
                     ->orWhere('sku', 'like', "%{$this->search}%")
                     ->orWhere('barcode', 'like', "%{$this->search}%");
             }))
+            ->with('branch')
             ->orderBy('name')
             ->get();
 

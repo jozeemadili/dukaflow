@@ -79,6 +79,9 @@
                         <img src="{{ $item->image()->getUrl() }}" alt="" class="h-16 w-full object-cover rounded mb-2 border border-hairline">
                     @endif
                     <p class="text-[13px] text-ink font-medium leading-snug mb-1">{{ $item->name }}</p>
+                    @if($item->branch)
+                        <p class="text-[10px] text-ink-mute mb-1 uppercase tracking-wide">{{ $item->branch->name }}</p>
+                    @endif
                     <p class="text-[15px] text-primary-deep tnum font-medium">TZS {{ number_format($item->unit_price, 0) }}</p>
                     <p class="text-[11px] mt-1 {{ $outOfStock ? 'text-ruby' : 'text-ink-mute' }}">
                         {{ $outOfStock ? 'Out of stock' : rtrim(rtrim(number_format($remaining, 2, '.', ''), '0'), '.') . ' ' . $item->unit . ' left' }}

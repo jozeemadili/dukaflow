@@ -46,11 +46,12 @@
                     <th class="px-5 py-3 font-normal">Name</th>
                     <th class="px-5 py-3 font-normal">Phone</th>
                     <th class="px-5 py-3 font-normal">Credit</th>
+                    <th class="px-5 py-3"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-hairline">
                 @forelse($customers as $customer)
-                    <tr>
+                    <tr class="hover:bg-canvas-soft/60">
                         <td class="px-5 py-3 tnum text-ink-mute">{{ $customer->customer_code }}</td>
                         <td class="px-5 py-3 text-ink font-medium">{{ $customer->name }}</td>
                         <td class="px-5 py-3 text-ink-secondary tnum">{{ $customer->phone }}</td>
@@ -61,9 +62,12 @@
                                 <span class="text-ink-mute">—</span>
                             @endif
                         </td>
+                        <td class="px-5 py-3 text-right">
+                            <a href="{{ route('portal.customers.show', $customer) }}" class="text-primary hover:text-primary-deep">View &rarr;</a>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-5 py-8 text-center text-ink-mute">No customers yet.</td></tr>
+                    <tr><td colspan="5" class="px-5 py-8 text-center text-ink-mute">No customers yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

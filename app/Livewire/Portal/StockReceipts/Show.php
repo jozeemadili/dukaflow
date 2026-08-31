@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Portal\StockReceipts;
 
+use App\Models\Branch;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
@@ -11,13 +12,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.portal', ['title' => 'Stock Receipt'])]
 class Show extends Component
 {
+    use WithFileUploads;
+
     public StockReceipt $receipt;
 
     public string $inventory_item_id = '';
+
+    public string $productSearch = '';
+
+    public ?string $selectedProductLabel = null;
+
+    /** @var array<int, array{id:int,name:string,quantity_on_hand:string,unit:?string,unit_price:?string}> */
+    public array $productMatches = [];
 
     public string $quantity = '';
 
@@ -33,10 +44,62 @@ class Show extends Component
 
     public string $new_unit_price = '';
 
+    public string $new_branch_id = '';
+
+    public $document;
+
     public function mount(StockReceipt $receipt)
     {
         abort_unless($receipt->merchant_id === Auth::user()->merchant_id, 403);
         $this->receipt = $receipt;
+    }
+
+    public function updatedProductSearch(string $value): void
+    {
+        $trimmed = trim($value);
+        $this->selectedProductLabel = null;
+        $this->inventory_item_id = '';
+
+        if (mb_strlen($trimmed) < 1) {
+            $this->productMatches = [];
+
+            return;
+        }
+
+        $this->productMatches = InventoryItem::where('merchant_id', Auth::user()->merchant_id)
+            ->where('name', 'like', "%{$trimmed}%")
+            ->limit(8)
+            ->get(['id', 'name', 'quantity_on_hand', 'unit', 'unit_price'])
+            ->map(fn ($i) => [
+                'id' => $i->id,
+                'name' => $i->name,
+                'quantity_on_hand' => $i->quantity_on_hand,
+                'unit' => $i->unit,
+                'unit_price' => $i->unit_price,
+            ])
+            ->all();
+    }
+
+    public function selectProduct(int $itemId): void
+    {
+        $match = collect($this->productMatches)->firstWhere('id', $itemId);
+
+        if (! $match) {
+            return;
+        }
+
+        $this->inventory_item_id = (string) $itemId;
+        $this->selectedProductLabel = $match['name'];
+        $this->productSearch = '';
+        $this->productMatches = [];
+    }
+
+    public function clearSelectedProduct(): void
+    {
+        $this->inventory_item_id = '';
+        $this->selectedProductLabel = null;
+        $this->productSearch = '';
+        $this->productMatches = [];
     }
 
     public function addExistingItem()
@@ -51,7 +114,27 @@ class Show extends Component
 
         $this->storeLine($item->id, (float) $this->quantity, (float) $this->unit_cost);
 
-        $this->reset(['inventory_item_id', 'quantity', 'unit_cost']);
+        $this->reset(['inventory_item_id', 'quantity', 'unit_cost', 'productSearch', 'selectedProductLabel', 'productMatches']);
+    }
+
+    public function uploadDocument()
+    {
+        $this->validate([
+            'document' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+        ]);
+
+        $this->receipt->addMedia($this->document->getRealPath())
+            ->usingFileName($this->document->getClientOriginalName())
+            ->toMediaCollection('documents');
+
+        $this->reset(['document']);
+        session()->flash('status', 'Supplier document uploaded.');
+    }
+
+    public function removeDocument(int $mediaId)
+    {
+        $media = $this->receipt->media()->where('id', $mediaId)->first();
+        $media?->delete();
     }
 
     public function addNewProduct()
@@ -66,6 +149,7 @@ class Show extends Component
 
         $item = InventoryItem::create([
             'merchant_id' => Auth::user()->merchant_id,
+            'branch_id' => $this->new_branch_id ?: null,
             'name' => $this->new_name,
             'sku' => $this->new_sku ?: null,
             'unit' => $this->new_unit ?: null,
@@ -77,7 +161,7 @@ class Show extends Component
 
         $this->storeLine($item->id, (float) $this->quantity, (float) $this->unit_cost);
 
-        $this->reset(['new_name', 'new_sku', 'new_unit', 'new_unit_price', 'quantity', 'unit_cost', 'addingNewProduct']);
+        $this->reset(['new_name', 'new_sku', 'new_unit', 'new_unit_price', 'new_branch_id', 'quantity', 'unit_cost', 'addingNewProduct']);
     }
 
     protected function storeLine(int $inventoryItemId, float $quantity, float $unitCost): void
@@ -167,7 +251,8 @@ class Show extends Component
 
         return view('livewire.portal.stock-receipts.show', [
             'lines' => $this->receipt->items()->with('inventoryItem')->get(),
-            'inventoryItems' => InventoryItem::where('merchant_id', Auth::user()->merchant_id)->orderBy('name')->get(),
+            'documents' => $this->receipt->getMedia('documents'),
+            'branches' => Branch::where('merchant_id', Auth::user()->merchant_id)->orderBy('name')->get(),
         ]);
     }
 }

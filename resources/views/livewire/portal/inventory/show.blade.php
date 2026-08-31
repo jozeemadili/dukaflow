@@ -7,16 +7,25 @@
                 <div class="h-20 w-20 rounded-lg bg-canvas-soft border border-hairline flex items-center justify-center text-ink-mute text-[11px]">No image</div>
             @endif
             <div class="flex-1">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <h2 class="text-[20px] font-light text-ink tracking-tight">{{ $item->name }}</h2>
                     @if($item->isLowStock())
                         <x-ui.badge tone="danger">low stock</x-ui.badge>
+                    @endif
+                    @if($item->isExpiringSoon())
+                        <x-ui.badge tone="warning">expires {{ $item->expiry_date->format('d M Y') }}</x-ui.badge>
+                    @elseif($item->isExpired())
+                        <x-ui.badge tone="danger">expired {{ $item->expiry_date->format('d M Y') }}</x-ui.badge>
+                    @endif
+                    @if($item->branch)
+                        <x-ui.badge tone="primary">{{ $item->branch->name }}</x-ui.badge>
                     @endif
                 </div>
                 <p class="text-[13px] text-ink-mute mt-1">
                     {{ $item->category?->name ?? 'Uncategorized' }}
                     @if($item->sku) &middot; SKU {{ $item->sku }} @endif
                     @if($item->barcode) &middot; Barcode {{ $item->barcode }} @endif
+                    @if($item->expiry_date && ! $item->isExpiringSoon() && ! $item->isExpired()) &middot; Expires {{ $item->expiry_date->format('d M Y') }} @endif
                 </p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-[13px]">
                     <div><p class="text-ink-mute mb-1">On hand</p><p class="text-ink font-medium tnum">{{ rtrim(rtrim($item->quantity_on_hand, '0'), '.') }} {{ $item->unit }}</p></div>
@@ -27,6 +36,13 @@
             </div>
             <a href="{{ route('portal.inventory.index') }}" class="text-[13px] text-primary hover:text-primary-deep">&larr; Back</a>
         </div>
+
+        @if($item->barcode && $this->barcodeSvg())
+            <div class="mt-4 pt-4 border-t border-hairline flex items-center gap-4">
+                <div class="bg-white p-2 rounded border border-hairline [&_svg]:h-16">{!! $this->barcodeSvg() !!}</div>
+                <p class="text-[12px] text-ink-mute">Print and attach this barcode to the physical product for scanning at checkout.</p>
+            </div>
+        @endif
     </x-ui.card>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

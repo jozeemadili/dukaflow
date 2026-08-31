@@ -40,6 +40,12 @@
                     <x-ui.input type="number" step="0.01" wire:model="quantity" label="Qty received" id="new_qty" />
                     <x-ui.input type="number" step="0.01" wire:model="unit_cost" label="Unit cost" id="new_cost" />
                     <x-ui.input type="number" step="0.01" wire:model="new_unit_price" label="Selling price" id="new_price" />
+                    <x-ui.select wire:model="new_branch_id" label="Store / branch" id="new_branch">
+                        <option value="">Not assigned</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </x-ui.select>
                     <div class="md:col-span-6">
                         <x-ui.button type="submit" target="addNewProduct">Add product to receipt</x-ui.button>
                     </div>
@@ -47,12 +53,40 @@
                 @error('new_name') <p class="text-ruby text-[12px] mt-2">{{ $message }}</p> @enderror
             @else
                 <form wire:submit="addExistingItem" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <x-ui.select wire:model="inventory_item_id" label="Product" id="existing_item">
-                        <option value="">Select product</option>
-                        @foreach($inventoryItems as $item)
-                            <option value="{{ $item->id }}">{{ $item->name }} @if($item->sku)({{ $item->sku }})@endif</option>
-                        @endforeach
-                    </x-ui.select>
+                    <div class="md:col-span-1 relative">
+                        <label class="block text-[13px] text-ink-mute mb-1.5">Product</label>
+                        @if($selectedProductLabel)
+                            <div class="flex items-center justify-between rounded-sm border border-hairline-input bg-canvas-soft text-[14px] px-3 py-2">
+                                <span class="text-ink">{{ $selectedProductLabel }}</span>
+                                <button type="button" wire:click="clearSelectedProduct" class="text-ink-mute hover:text-ruby text-[12px]">&times;</button>
+                            </div>
+                        @else
+                            <input
+                                type="text"
+                                wire:model.live.debounce.250ms="productSearch"
+                                placeholder="Search product by name…"
+                                autocomplete="off"
+                                class="w-full rounded-sm border border-hairline-input bg-canvas text-ink text-[15px] px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+                            >
+                            @if(count($productMatches) > 0)
+                                <div class="absolute z-10 mt-1 w-full min-w-[320px] border border-hairline rounded-md bg-canvas shadow-lg divide-y divide-hairline overflow-hidden">
+                                    @foreach($productMatches as $match)
+                                        <button
+                                            type="button"
+                                            wire:click="selectProduct({{ $match['id'] }})"
+                                            class="w-full flex items-center justify-between px-3 py-2 text-left text-[13px] hover:bg-canvas-soft"
+                                        >
+                                            <span class="text-ink font-medium">{{ $match['name'] }}</span>
+                                            <span class="text-ink-mute text-[11px] text-right tnum">
+                                                {{ rtrim(rtrim(number_format($match['quantity_on_hand'], 2, '.', ''), '0'), '.') }} {{ $match['unit'] }} left
+                                                @if($match['unit_price'])<br>TZS {{ number_format($match['unit_price'], 0) }}@endif
+                                            </span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endif
+                    </div>
                     <x-ui.input type="number" step="0.01" wire:model="quantity" label="Qty received" id="existing_qty" />
                     <x-ui.input type="number" step="0.01" wire:model="unit_cost" label="Unit cost" id="existing_cost" />
                     <x-ui.button type="submit" target="addExistingItem">Add to receipt</x-ui.button>
@@ -61,6 +95,36 @@
             @endif
         </x-ui.card>
     @endif
+
+    <x-ui.card>
+        <h3 class="text-[15px] text-ink-secondary mb-3">Supplier documents (proforma invoice, etc.)</h3>
+
+        @if($receipt->isPending())
+            <div class="flex items-end gap-3 mb-3">
+                <div class="flex-1">
+                    <input type="file" wire:model="document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="text-[13px] text-ink-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-pill file:border-0 file:text-[12px] file:bg-primary-subtle/40 file:text-primary-deep">
+                    @error('document') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                    <div wire:loading wire:target="document" class="text-[12px] text-ink-mute mt-1">Uploading…</div>
+                </div>
+                <x-ui.button size="sm" wire:click="uploadDocument" target="uploadDocument">Upload</x-ui.button>
+            </div>
+        @endif
+
+        @if($documents->isNotEmpty())
+            <ul class="space-y-1.5">
+                @foreach($documents as $doc)
+                    <li class="flex items-center justify-between text-[13px] px-3 py-1.5 rounded bg-canvas-soft">
+                        <a href="{{ $doc->getUrl() }}" target="_blank" class="text-primary hover:text-primary-deep truncate">{{ $doc->file_name }}</a>
+                        @if($receipt->isPending())
+                            <button wire:click="removeDocument({{ $doc->id }})" wire:confirm="Remove this document?" class="text-ink-mute hover:text-ruby text-[12px] shrink-0 ml-3">Remove</button>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="text-[13px] text-ink-mute">No documents uploaded yet.</p>
+        @endif
+    </x-ui.card>
 
     <x-ui.card padding="p-0">
         <table class="w-full text-[13px]">

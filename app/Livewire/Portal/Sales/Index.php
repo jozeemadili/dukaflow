@@ -118,7 +118,7 @@ class Index extends Component
 
     public function render()
     {
-        $sales = $this->filteredQuery()->paginate(15);
+        $sales = $this->filteredQuery()->paginate(10);
 
         return view('livewire.portal.sales.index', compact('sales'));
     }

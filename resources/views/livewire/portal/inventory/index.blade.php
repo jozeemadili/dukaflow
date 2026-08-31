@@ -6,6 +6,13 @@
         <p class="text-[12px] text-ink-mute">Receiving stock from a supplier? Use <a href="{{ route('portal.stock-receipts.index') }}" class="text-primary hover:text-primary-deep">Stock Receipts</a> so it goes through approval before quantities update.</p>
     </div>
 
+    @if($expiringSoon->isNotEmpty())
+        <div class="rounded-lg bg-canvas-cream border border-lemon/20 text-lemon px-4 py-2.5 text-[13px]">
+            <strong>{{ $expiringSoon->count() }} product{{ $expiringSoon->count() > 1 ? 's' : '' }}</strong> expiring within a month:
+            {{ $expiringSoon->map(fn ($i) => $i->name.' ('.$i->expiry_date->format('d M Y').')')->join(', ') }}
+        </div>
+    @endif
+
     @if($showItemForm)
         <x-ui.card>
             <form wire:submit="addItem" class="space-y-4">
@@ -32,7 +39,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <x-ui.input wire:model="sku" label="SKU" id="item_sku" />
-                    <x-ui.input wire:model="barcode" label="Barcode" id="item_barcode" />
+                    <div>
+                        <label class="block text-[13px] text-ink-mute mb-1.5">Barcode</label>
+                        <div class="flex gap-2">
+                            <input type="text" wire:model="barcode" id="item_barcode" placeholder="Use existing or generate" class="flex-1 rounded-sm border border-hairline-input bg-canvas text-ink text-[15px] px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition">
+                            <button type="button" wire:click="generateBarcode" class="shrink-0 text-[12px] px-3 rounded-sm border border-hairline text-ink-secondary hover:border-primary/40">Generate</button>
+                        </div>
+                        @error('barcode') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                    </div>
                     <div>
                         <x-ui.select wire:model.live="category_id" label="Category" id="item_category">
                             <option value="">Uncategorized</option>
@@ -42,6 +56,16 @@
                             <option value="__new__">+ Add new category…</option>
                         </x-ui.select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <x-ui.select wire:model="branch_id" label="Store / branch" id="item_branch">
+                        <option value="">Not assigned</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </x-ui.select>
+                    <x-ui.input type="date" wire:model="expiry_date" label="Expiry date (optional)" id="item_expiry" />
                 </div>
 
                 @if($addingNewCategory)
@@ -91,6 +115,7 @@
             <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
                 <tr>
                     <th class="px-5 py-3 font-normal">Item</th>
+                    <th class="px-5 py-3 font-normal">Store</th>
                     <th class="px-5 py-3 font-normal">Category</th>
                     <th class="px-5 py-3 font-normal">SKU / Barcode</th>
                     <th class="px-5 py-3 font-normal">Selling price</th>
@@ -112,6 +137,7 @@
                                 {{ $item->name }}
                             </a>
                         </td>
+                        <td class="px-5 py-3 text-ink-secondary">{{ $item->branch?->name ?? '—' }}</td>
                         <td class="px-5 py-3 text-ink-secondary">{{ $item->category?->name ?? '—' }}</td>
                         <td class="px-5 py-3 text-ink-secondary tnum">{{ $item->sku }} @if($item->barcode)<br><span class="text-[11px] text-ink-mute">{{ $item->barcode }}</span>@endif</td>
                         <td class="px-5 py-3 tnum text-ink-secondary">{{ $item->unit_price ? number_format($item->unit_price, 0) : '—' }}</td>
@@ -119,6 +145,11 @@
                             {{ rtrim(rtrim($item->quantity_on_hand, '0'), '.') }} {{ $item->unit }}
                             @if($item->isLowStock())
                                 <x-ui.badge tone="danger" class="ml-1">low stock</x-ui.badge>
+                            @endif
+                            @if($item->isExpiringSoon())
+                                <x-ui.badge tone="warning" class="ml-1">expires {{ $item->expiry_date->format('d M') }}</x-ui.badge>
+                            @elseif($item->isExpired())
+                                <x-ui.badge tone="danger" class="ml-1">expired</x-ui.badge>
                             @endif
                         </td>
                         <td class="px-5 py-3 tnum text-ink-secondary">{{ rtrim(rtrim($item->reorder_level, '0'), '.') }}</td>
@@ -129,7 +160,7 @@
 
                     @if($movingItemId === $item->id)
                         <tr class="bg-canvas-soft/60">
-                            <td colspan="7" class="px-5 py-4">
+                            <td colspan="8" class="px-5 py-4">
                                 <form wire:submit="saveMovement" class="flex flex-wrap gap-4 items-end">
                                     <x-ui.select wire:model="movementType" label="Type" id="movement_type">
                                         <option value="in">Stock in</option>
@@ -145,9 +176,11 @@
                         </tr>
                     @endif
                 @empty
-                    <tr><td colspan="7" class="px-5 py-8 text-center text-ink-mute">No inventory items yet.</td></tr>
+                    <tr><td colspan="8" class="px-5 py-8 text-center text-ink-mute">No inventory items yet.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </x-ui.card>
+
+    <div>{{ $items->links() }}</div>
 </div>
