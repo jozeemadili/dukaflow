@@ -1,6 +1,6 @@
 <div class="space-y-4">
-    <div class="flex items-center gap-3">
-        <x-ui.button wire:click="$toggle('showItemForm')">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <x-ui.button wire:click="$toggle('showItemForm')" class="shrink-0 self-start">
             {{ $showItemForm ? 'Cancel' : '+ Add inventory item' }}
         </x-ui.button>
         <p class="text-[12px] text-ink-mute">Receiving stock from a supplier? Use <a href="{{ route('portal.stock-receipts.index') }}" class="text-primary hover:text-primary-deep">Stock Receipts</a> so it goes through approval before quantities update.</p>

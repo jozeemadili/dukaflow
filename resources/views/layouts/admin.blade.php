@@ -9,19 +9,49 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="bg-canvas-soft text-ink font-sans antialiased">
+<body class="bg-canvas-soft text-ink font-sans antialiased" x-data="{ sidebarOpen: false }">
+    <div class="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-brand-dark px-4 py-3">
+        <div class="flex items-center gap-2">
+            <img src="{{ asset('images/favicon-512.png') }}" alt="DukaFlow" class="h-7 w-7 rounded-md shrink-0">
+            <span class="text-[16px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
+        </div>
+        <button type="button" @click="sidebarOpen = true" class="p-1.5 text-white/80 hover:text-white" aria-label="Open menu">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <div
+        x-show="sidebarOpen"
+        x-cloak
+        @click="sidebarOpen = false"
+        class="lg:hidden fixed inset-0 z-40 bg-black/40"
+        style="display: none;"
+    ></div>
+
     <div class="flex min-h-screen gap-4 p-4">
-        <aside class="w-60 shrink-0">
-            <div class="sticky top-4 bg-brand-dark rounded-xl p-4 flex flex-col h-[calc(100vh-2rem)]">
-                <div class="px-2 py-2 mb-4 flex items-center gap-2">
-                    <img src="{{ asset('images/favicon-512.png') }}" alt="DukaFlow" class="h-7 w-7 rounded-md shrink-0">
-                    <div class="min-w-0">
-                        <span class="text-[17px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
-                        <p class="text-[11px] text-white/40 mt-0.5 uppercase tracking-wide">Admin console</p>
+        <aside
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+            class="fixed inset-y-0 left-0 z-50 w-64 p-4 transition-transform duration-200 lg:static lg:z-auto lg:w-60 lg:p-0 lg:shrink-0"
+        >
+            <div class="bg-brand-dark rounded-xl p-4 flex flex-col h-full lg:h-[calc(100vh-2rem)] lg:sticky lg:top-4">
+                <div class="px-2 py-2 mb-4 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <img src="{{ asset('images/favicon-512.png') }}" alt="DukaFlow" class="h-7 w-7 rounded-md shrink-0">
+                        <div class="min-w-0">
+                            <span class="text-[17px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
+                            <p class="text-[11px] text-white/40 mt-0.5 uppercase tracking-wide">Admin console</p>
+                        </div>
                     </div>
+                    <button type="button" @click="sidebarOpen = false" class="lg:hidden shrink-0 p-1 text-white/60 hover:text-white" aria-label="Close menu">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <nav class="space-y-1 flex-1 overflow-y-auto">
+                <nav class="space-y-1 flex-1 overflow-y-auto" @click="sidebarOpen = false">
                     <a href="{{ route('admin.dashboard') }}" class="icon-dock-item {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}">
                         <x-icon.dashboard class="h-4 w-4 shrink-0" /> Dashboard
                     </a>

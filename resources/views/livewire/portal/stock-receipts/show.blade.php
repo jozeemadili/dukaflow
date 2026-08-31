@@ -69,7 +69,7 @@
                                 class="w-full rounded-sm border border-hairline-input bg-canvas text-ink text-[15px] px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
                             >
                             @if(count($productMatches) > 0)
-                                <div class="absolute z-10 mt-1 w-full min-w-[320px] border border-hairline rounded-md bg-canvas shadow-lg divide-y divide-hairline overflow-hidden">
+                                <div class="absolute z-10 mt-1 w-full max-w-full sm:min-w-[320px] border border-hairline rounded-md bg-canvas shadow-lg divide-y divide-hairline overflow-hidden">
                                     @foreach($productMatches as $match)
                                         <button
                                             type="button"
