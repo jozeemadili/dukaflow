@@ -49,6 +49,11 @@ class Show extends Component
 
         $estimatedProfit = $totalPaid - $estimatedCost;
 
+        $invoices = $this->customer->invoices()
+            ->latest('issue_date')
+            ->latest('id')
+            ->get();
+
         return view('livewire.portal.customers.show', [
             'customer' => $this->customer,
             'sales' => $sales,
@@ -56,6 +61,7 @@ class Show extends Component
             'totalDiscount' => $totalDiscount,
             'estimatedProfit' => $estimatedProfit,
             'itemsPurchased' => $itemsPurchased->sortByDesc('amount')->values(),
+            'invoices' => $invoices,
         ]);
     }
 }

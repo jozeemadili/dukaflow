@@ -5,6 +5,7 @@ namespace App\Livewire\Portal\Pos;
 use App\Models\Customer;
 use App\Models\DiscountLimit;
 use App\Models\InventoryItem;
+use App\Models\PaymentMethod;
 use App\Models\SaleItem;
 use App\Models\SalesRecord;
 use App\Models\StockMovement;
@@ -26,6 +27,11 @@ class Index extends Component
     public array $cart = [];
 
     public ?string $lastReceiptTotal = null;
+
+    // Payment
+    public ?int $paymentMethodId = null;
+
+    public string $amountTendered = '';
 
     // Customer
     public ?int $customerId = null;
@@ -66,6 +72,14 @@ class Index extends Component
     public string $overridePassword = '';
 
     public string $checkoutError = '';
+
+    public function mount(): void
+    {
+        $this->paymentMethodId = PaymentMethod::where('merchant_id', Auth::user()->merchant_id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->value('id');
+    }
 
     public function addToCart(int $itemId): void
     {
@@ -129,6 +143,25 @@ class Index extends Component
         $this->cart = [];
         $this->resetDiscounts();
         $this->resetCustomer();
+        $this->amountTendered = '';
+    }
+
+    public function changeDue(): float
+    {
+        if ($this->amountTendered === '') {
+            return 0.0;
+        }
+
+        return max(0.0, (float) $this->amountTendered - $this->totals()['total']);
+    }
+
+    public function amountShort(): float
+    {
+        if ($this->amountTendered === '') {
+            return 0.0;
+        }
+
+        return max(0.0, $this->totals()['total'] - (float) $this->amountTendered);
     }
 
     // --- Discounts -----------------------------------------------------
@@ -397,8 +430,12 @@ class Index extends Component
 
         $merchantId = Auth::user()->merchant_id;
         $totals = $this->totals();
+        $paymentMethod = $this->paymentMethodId
+            ? PaymentMethod::where('merchant_id', $merchantId)->find($this->paymentMethodId)
+            : null;
+        $tendered = $this->amountTendered !== '' ? (float) $this->amountTendered : $totals['total'];
 
-        DB::transaction(function () use ($merchantId, $totals) {
+        DB::transaction(function () use ($merchantId, $totals, $paymentMethod, $tendered) {
             $sale = SalesRecord::create([
                 'merchant_id' => $merchantId,
                 'customer_id' => $this->customerId,
@@ -408,7 +445,10 @@ class Index extends Component
                 'discount_value' => $this->overallDiscountValue !== '' ? (float) $this->overallDiscountValue : null,
                 'discount_amount' => $totals['lineDiscount'] + $totals['overallDiscount'],
                 'discount_approved_by' => $this->discountApprovedBy,
-                'payment_method' => 'cash',
+                'payment_method' => $paymentMethod?->name ?? 'Cash',
+                'payment_method_id' => $paymentMethod?->id,
+                'amount_tendered' => $tendered,
+                'change_due' => max(0, $tendered - $totals['total']),
                 'items_count' => $this->cartCount(),
                 'description' => 'POS sale',
                 'sale_date' => now()->toDateString(),
@@ -451,6 +491,7 @@ class Index extends Component
         $this->cart = [];
         $this->resetDiscounts();
         $this->resetCustomer();
+        $this->amountTendered = '';
     }
 
     public function cartCount(): float
@@ -508,10 +549,16 @@ class Index extends Component
                 ->get()
             : collect();
 
+        $paymentMethods = PaymentMethod::where('merchant_id', $merchantId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
         return view('livewire.portal.pos.index', [
             'items' => $items,
             'customers' => $customers,
             'totals' => $this->totals(),
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 }

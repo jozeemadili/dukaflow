@@ -57,6 +57,48 @@
 
     <x-ui.card padding="p-0">
         <div class="px-5 py-4 border-b border-hairline">
+            <h2 class="text-[15px] text-ink-secondary">Invoices</h2>
+        </div>
+        <table class="w-full text-[13px]">
+            <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">
+                <tr>
+                    <th class="px-5 py-3 font-normal">Number</th>
+                    <th class="px-5 py-3 font-normal">Issue date</th>
+                    <th class="px-5 py-3 font-normal">Status</th>
+                    <th class="px-5 py-3 font-normal text-right">Total</th>
+                    <th class="px-5 py-3 font-normal text-right">Balance due</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-hairline">
+                @forelse($invoices as $invoice)
+                    <tr>
+                        <td class="px-5 py-2.5 text-ink font-medium">{{ $invoice->number }}</td>
+                        <td class="px-5 py-2.5 text-ink-secondary">{{ $invoice->issue_date->format('d M Y') }}</td>
+                        <td class="px-5 py-2.5">
+                            <x-ui.badge :tone="match($invoice->status) {
+                                'paid' => 'success',
+                                'partially_paid' => 'warning',
+                                'cancelled' => 'danger',
+                                'invoiced' => 'primary',
+                                default => 'neutral',
+                            }">{{ $invoice->statusLabel() }}</x-ui.badge>
+                        </td>
+                        <td class="px-5 py-2.5 tnum text-ink text-right">{{ number_format($invoice->total, 0) }}</td>
+                        <td class="px-5 py-2.5 tnum text-right {{ $invoice->balanceDue() > 0 ? 'text-ruby' : 'text-ink-mute' }}">{{ number_format($invoice->balanceDue(), 0) }}</td>
+                        <td class="px-5 py-2.5 text-right">
+                            <a href="{{ route('portal.invoices.show', $invoice) }}" class="text-primary hover:text-primary-deep">View &rarr;</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="px-5 py-6 text-center text-ink-mute">No invoices yet.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </x-ui.card>
+
+    <x-ui.card padding="p-0">
+        <div class="px-5 py-4 border-b border-hairline">
             <h2 class="text-[15px] text-ink-secondary">Sales history</h2>
         </div>
         <table class="w-full text-[13px]">

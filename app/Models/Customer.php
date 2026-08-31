@@ -30,4 +30,9 @@ class Customer extends Model
     {
         return $this->hasMany(SalesRecord::class, 'customer_id');
     }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
 }

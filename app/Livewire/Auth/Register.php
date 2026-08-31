@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Models\Merchant;
+use App\Models\PaymentMethod;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,8 @@ class Register extends Component
                 'region' => $this->region,
                 'kyc_status' => Merchant::KYC_PENDING,
             ]);
+
+            PaymentMethod::seedDefaultsFor($merchant->id);
 
             $user = User::create([
                 'name' => $this->owner_name,

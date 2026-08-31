@@ -61,6 +61,9 @@
                     <a href="{{ route('portal.sales.index') }}" class="icon-dock-item {{ request()->routeIs('portal.sales.*') ? 'is-active' : '' }}">
                         <x-icon.sales class="h-4 w-4 shrink-0" /> Sales
                     </a>
+                    <a href="{{ route('portal.invoices.index') }}" class="icon-dock-item {{ request()->routeIs('portal.invoices.*') ? 'is-active' : '' }}">
+                        <x-icon.invoice class="h-4 w-4 shrink-0" /> Invoices
+                    </a>
                     <a href="{{ route('portal.expenses.index') }}" class="icon-dock-item {{ request()->routeIs('portal.expenses.*') ? 'is-active' : '' }}">
                         <x-icon.expenses class="h-4 w-4 shrink-0" /> Expenses
                     </a>
@@ -81,6 +84,9 @@
                     </a>
                     <a href="{{ route('portal.payments.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payments.*') ? 'is-active' : '' }}">
                         <x-icon.receipt class="h-4 w-4 shrink-0" /> Payments
+                    </a>
+                    <a href="{{ route('portal.payment-methods.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payment-methods.*') ? 'is-active' : '' }}">
+                        <x-icon.wallet class="h-4 w-4 shrink-0" /> Payment Methods
                     </a>
                     <a href="{{ route('portal.kyc.index') }}" class="icon-dock-item {{ request()->routeIs('portal.kyc.*') ? 'is-active' : '' }}">
                         <x-icon.shield class="h-4 w-4 shrink-0" /> KYC Documents

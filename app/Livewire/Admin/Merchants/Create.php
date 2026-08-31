@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Merchants;
 
 use App\Models\Merchant;
+use App\Models\PaymentMethod;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,8 @@ class Create extends Component
                 'reviewed_by' => $this->markVerified ? $admin->id : null,
                 'reviewed_at' => $this->markVerified ? now() : null,
             ]);
+
+            PaymentMethod::seedDefaultsFor($merchant->id);
 
             $owner = User::create([
                 'name' => $this->owner_name,

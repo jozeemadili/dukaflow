@@ -190,6 +190,42 @@
                     <span class="text-[22px] font-light tracking-tight text-ink tnum">TZS {{ number_format($totals['total'], 0) }}</span>
                 </div>
 
+                @if(count($cart) > 0)
+                    <div class="pt-2 space-y-2">
+                        <div>
+                            <label class="block text-[11px] text-ink-mute mb-1">Payment method</label>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($paymentMethods as $pm)
+                                    <button
+                                        type="button"
+                                        wire:click="$set('paymentMethodId', {{ $pm->id }})"
+                                        class="inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-pill border {{ $paymentMethodId === $pm->id ? 'bg-brand-dark text-white border-brand-dark' : 'border-hairline text-ink-secondary hover:border-primary/40' }}"
+                                    >
+                                        <x-payment-method-badge :method="$pm" size="h-4 w-4 text-[8px]" />
+                                        {{ $pm->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-ink-mute mb-1">Amount received</label>
+                                <input type="number" step="0.01" wire:model.live.debounce.300ms="amountTendered" placeholder="{{ number_format($totals['total'], 0) }}" class="w-full text-[13px] rounded-sm border border-hairline-input px-2.5 py-1.5 tnum">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-ink-mute mb-1">Change</label>
+                                <div class="text-[13px] rounded-sm border border-hairline bg-canvas-soft px-2.5 py-1.5 tnum text-ink font-medium">
+                                    TZS {{ number_format($this->changeDue(), 0) }}
+                                </div>
+                            </div>
+                        </div>
+                        @if($this->amountShort() > 0)
+                            <p class="text-[11px] text-ruby">TZS {{ number_format($this->amountShort(), 0) }} short of the total.</p>
+                        @endif
+                    </div>
+                @endif
+
                 @if($this->effectiveDiscountPercent() > 0)
                     <p class="text-[11px] text-ink-mute">Effective discount: {{ $this->effectiveDiscountPercent() }}% (your limit: {{ $this->myDiscountLimit() }}%)</p>
                 @endif
