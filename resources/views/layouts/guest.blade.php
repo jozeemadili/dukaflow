@@ -11,7 +11,8 @@
 </head>
 <body class="min-h-screen bg-canvas">
     <div class="gradient-mesh min-h-screen flex flex-col">
-        <header class="px-8 py-6">
+        <header class="px-8 py-6 flex items-center gap-2.5">
+            <img src="{{ asset('images/favicon-512.png') }}" alt="DukaFlow" class="h-8 w-8 rounded-md">
             <span class="text-[20px] font-light tracking-tight text-ink">Duka<span class="font-medium text-primary">Flow</span></span>
         </header>
 

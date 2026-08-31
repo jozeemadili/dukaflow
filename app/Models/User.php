@@ -51,4 +51,15 @@ class User extends Authenticatable
     {
         return $this->user_type === self::TYPE_MERCHANT;
     }
+
+    public function roleLabel(): ?string
+    {
+        $role = $this->roles->first()?->name;
+
+        if (! $role) {
+            return null;
+        }
+
+        return str($role)->after('merchant_')->replace('_', ' ')->title()->toString();
+    }
 }

@@ -13,9 +13,12 @@
     <div class="flex min-h-screen gap-4 p-4">
         <aside class="w-60 shrink-0">
             <div class="sticky top-4 bg-brand-dark rounded-xl p-4 flex flex-col h-[calc(100vh-2rem)]">
-                <div class="px-2 py-2 mb-4">
-                    <span class="text-[17px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
-                    <p class="text-[11px] text-white/40 mt-0.5 uppercase tracking-wide">Admin console</p>
+                <div class="px-2 py-2 mb-4 flex items-center gap-2">
+                    <img src="{{ asset('images/favicon-512.png') }}" alt="DukaFlow" class="h-7 w-7 rounded-md shrink-0">
+                    <div class="min-w-0">
+                        <span class="text-[17px] font-light tracking-tight text-white">Duka<span class="font-medium text-primary-soft">Flow</span></span>
+                        <p class="text-[11px] text-white/40 mt-0.5 uppercase tracking-wide">Admin console</p>
+                    </div>
                 </div>
 
                 <nav class="space-y-1 flex-1 overflow-y-auto">
@@ -70,6 +73,9 @@
 
                 <div class="pt-3 mt-3 border-t border-white/10">
                     <p class="px-2 text-[13px] text-white/80 truncate">{{ auth()->user()->name }}</p>
+                    @if(auth()->user()->roleLabel())
+                        <p class="px-2 text-[11px] text-primary-soft/80 uppercase tracking-wide">{{ auth()->user()->roleLabel() }}</p>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" class="mt-1">
                         @csrf
                         <button type="submit" class="icon-dock-item w-full text-left text-ruby/80 hover:text-ruby hover:bg-ruby/10">
