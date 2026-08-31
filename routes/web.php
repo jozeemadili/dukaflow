@@ -75,5 +75,6 @@ Route::middleware(['auth', 'merchant'])->prefix('portal')->name('portal.')->grou
     Route::get('/kyc', Portal\Kyc\Index::class)->name('kyc.index');
     Route::get('/staff', Portal\Staff\Index::class)->name('staff.index');
     Route::get('/discount-limits', Portal\DiscountLimits\Index::class)->name('discount-limits.index');
+    Route::get('/branding', Portal\Branding\Index::class)->name('branding.index');
     Route::get('/credit', Portal\Credit\Index::class)->name('credit.index');
 });

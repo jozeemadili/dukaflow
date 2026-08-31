@@ -6,6 +6,7 @@ use App\Models\InventoryItem;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoicePayment;
+use App\Models\Merchant;
 use App\Models\PaymentMethod;
 use App\Models\StockMovement;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -368,6 +369,8 @@ class Show extends Component
         $pdf = Pdf::loadView('exports.invoice-pdf', [
             'invoice' => $this->invoice->load(['items', 'customer', 'payments.paymentMethod']),
             'merchant' => $merchant,
+            'logoDataUri' => $this->logoDataUri($merchant),
+            'brandColor' => $merchant->brandColor(),
         ])->setPaper('a4', 'portrait');
 
         $filename = ($this->invoice->isDraft() ? 'proforma-' : 'invoice-').$this->invoice->number.'.pdf';
@@ -375,6 +378,23 @@ class Show extends Component
         return response()->streamDownload(fn () => print ($pdf->output()), $filename, [
             'Content-Type' => 'application/pdf',
         ]);
+    }
+
+    protected function logoDataUri(Merchant $merchant): ?string
+    {
+        $logo = $merchant->logo();
+
+        if (! $logo) {
+            return null;
+        }
+
+        $path = $logo->getPath();
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return 'data:'.$logo->mime_type.';base64,'.base64_encode(file_get_contents($path));
     }
 
     public function render()

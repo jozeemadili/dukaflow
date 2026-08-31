@@ -9,16 +9,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'business_name', 'owner_name', 'phone', 'email', 'business_type',
     'tin_number', 'physical_address', 'region', 'city',
-    'kyc_status', 'subscription_tier', 'status',
+    'kyc_status', 'subscription_tier', 'status', 'brand_color',
     'created_by_agent_id', 'reviewed_by', 'reviewed_at', 'review_notes',
 ])]
-class Merchant extends Model
+class Merchant extends Model implements HasMedia
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, InteractsWithMedia, LogsActivity;
+
+    public const DEFAULT_BRAND_COLOR = '#01162F';
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')->singleFile();
+    }
+
+    public function logo(): ?Media
+    {
+        return $this->getFirstMedia('logo');
+    }
+
+    public function brandColor(): string
+    {
+        return $this->brand_color ?: self::DEFAULT_BRAND_COLOR;
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

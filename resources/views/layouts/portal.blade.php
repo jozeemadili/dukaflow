@@ -104,6 +104,9 @@
                     <a href="{{ route('portal.staff.index') }}" class="icon-dock-item {{ request()->routeIs('portal.staff.*') ? 'is-active' : '' }}">
                         <x-icon.users class="h-4 w-4 shrink-0" /> Staff
                     </a>
+                    <a href="{{ route('portal.branding.index') }}" class="icon-dock-item {{ request()->routeIs('portal.branding.*') ? 'is-active' : '' }}">
+                        <x-icon.palette class="h-4 w-4 shrink-0" /> Branding
+                    </a>
                     @endcan
 
                     @can('manage-discount-limits')
