@@ -1,6 +1,17 @@
 <div>
     <h2 class="text-[22px] font-light text-ink tracking-tight mb-6">Register your business</h2>
 
+    <a href="{{ route('auth.google.redirect') }}" class="w-full inline-flex items-center justify-center gap-2.5 rounded-pill border border-hairline-input bg-canvas text-ink text-[14px] font-medium px-4 py-2.5 hover:bg-canvas-soft transition">
+        <x-icon.google class="h-4.5 w-4.5 shrink-0" />
+        Continue with Google
+    </a>
+
+    <div class="flex items-center gap-3 my-5">
+        <div class="flex-1 h-px bg-hairline"></div>
+        <span class="text-[12px] text-ink-mute">or register with email</span>
+        <div class="flex-1 h-px bg-hairline"></div>
+    </div>
+
     <form wire:submit="register" class="space-y-3">
         <x-ui.input wire:model="business_name" label="Business name" id="business_name" />
         @error('business_name') <p class="text-ruby text-[12px] -mt-2">{{ $message }}</p> @enderror
