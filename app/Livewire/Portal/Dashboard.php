@@ -32,12 +32,14 @@ class Dashboard extends Component
             'merchant' => $merchant,
             'salesLast30' => $merchant->salesRecords()->where('sale_date', '>=', $thirtyDaysAgo)->sum('amount'),
             'expensesLast30' => $merchant->expenses()->where('expense_date', '>=', $thirtyDaysAgo)->sum('amount'),
-            'lowStockCount' => $merchant->inventoryItems()->whereColumn('quantity_on_hand', '<=', 'reorder_level')->count(),
+            'lowStockCount' => $merchant->lowStockItems()->count(),
             'unverifiedPayments' => $merchant->paymentRecords()->where('status', 'recorded')->count(),
             'trendLabels' => $days->map(fn ($d) => Carbon::parse($d)->format('d M'))->all(),
             'salesTrend' => $days->map(fn ($d) => (float) ($salesByDay[$d] ?? 0))->all(),
             'expensesTrend' => $days->map(fn ($d) => (float) ($expensesByDay[$d] ?? 0))->all(),
-            'lowStockItems' => $merchant->inventoryItems()->whereColumn('quantity_on_hand', '<=', 'reorder_level')->limit(5)->get(),
+            'lowStockItems' => $merchant->lowStockItems()->limit(5)->get(),
+            'expiringSoonCount' => $merchant->expiringSoonItems()->count(),
+            'expiringSoonItems' => $merchant->expiringSoonItems()->orderBy('expiry_date')->limit(5)->get(),
             'recentPayments' => $merchant->paymentRecords()->latest('payment_date')->limit(5)->get(),
         ]);
     }

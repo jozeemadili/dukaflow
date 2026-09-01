@@ -161,6 +161,55 @@
         <div class="flex-1 min-w-0">
             <header class="flex items-center justify-between mb-6 px-1 pt-2">
                 <h1 class="text-[28px] font-light tracking-tight text-ink">{{ $title ?? 'Dashboard' }}</h1>
+
+                @if(auth()->user()->merchant)
+                    @php
+                        $notifyMerchant = auth()->user()->merchant;
+                        $notifyLowStock = $notifyMerchant->lowStockItems()->limit(5)->get();
+                        $notifyExpiring = $notifyMerchant->expiringSoonItems()->orderBy('expiry_date')->limit(5)->get();
+                        $notifyCount = $notifyMerchant->lowStockItems()->count() + $notifyMerchant->expiringSoonItems()->count();
+                    @endphp
+                    <div class="relative" x-data="{ notifyOpen: false }">
+                        <button
+                            type="button"
+                            @click.stop="notifyOpen = !notifyOpen"
+                            @click.outside="notifyOpen = false"
+                            class="relative p-2 rounded-full hover:bg-canvas-soft text-ink-secondary"
+                            aria-label="Notifications"
+                        >
+                            <x-icon.bell class="h-5 w-5" />
+                            @if($notifyCount > 0)
+                                <span class="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full bg-ruby text-white text-[10px] leading-4 text-center font-medium">{{ $notifyCount > 9 ? '9+' : $notifyCount }}</span>
+                            @endif
+                        </button>
+
+                        <div x-show="notifyOpen" x-cloak class="absolute right-0 mt-2 w-80 max-w-[90vw] bg-canvas border border-hairline rounded-lg shadow-lg z-50 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-hairline">
+                                <h3 class="text-[13px] font-medium text-ink">Notifications</h3>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto divide-y divide-hairline">
+                                @forelse($notifyLowStock as $item)
+                                    <a href="{{ route('portal.inventory.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-canvas-soft">
+                                        <span class="mt-1 h-2 w-2 rounded-full bg-ruby shrink-0"></span>
+                                        <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $item->name }}</strong> is low on stock — {{ rtrim(rtrim($item->quantity_on_hand, '0'), '.') }} {{ $item->unit }} left.</span>
+                                    </a>
+                                @endforelse
+                                @forelse($notifyExpiring as $item)
+                                    <a href="{{ route('portal.inventory.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-canvas-soft">
+                                        <span class="mt-1 h-2 w-2 rounded-full bg-lemon shrink-0"></span>
+                                        <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $item->name }}</strong> expires {{ $item->expiry_date->format('d M Y') }}.</span>
+                                    </a>
+                                @endforelse
+                                @if($notifyCount === 0)
+                                    <p class="px-4 py-6 text-center text-[12.5px] text-ink-mute">You're all caught up.</p>
+                                @endif
+                            </div>
+                            @if($notifyCount > 0)
+                                <a href="{{ route('portal.inventory.index') }}" class="block px-4 py-2.5 text-center text-[12.5px] text-primary hover:text-primary-deep border-t border-hairline">View inventory &rarr;</a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </header>
 
             @if(auth()->user()->merchant && auth()->user()->merchant->kyc_status !== \App\Models\Merchant::KYC_APPROVED)

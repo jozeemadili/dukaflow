@@ -201,12 +201,7 @@ class Index extends Component
             ->orderBy('name')
             ->paginate(10);
 
-        $expiringSoon = InventoryItem::where('merchant_id', $merchantId)
-            ->whereNotNull('expiry_date')
-            ->whereDate('expiry_date', '<=', now()->addMonth())
-            ->whereDate('expiry_date', '>=', now())
-            ->orderBy('expiry_date')
-            ->get();
+        $expiringSoon = Auth::user()->merchant->expiringSoonItems()->orderBy('expiry_date')->get();
 
         return view('livewire.portal.inventory.index', [
             'items' => $items,

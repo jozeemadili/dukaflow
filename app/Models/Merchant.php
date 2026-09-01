@@ -124,6 +124,19 @@ class Merchant extends Model implements HasMedia
         return $this->hasMany(InventoryItem::class);
     }
 
+    public function lowStockItems(): HasMany
+    {
+        return $this->inventoryItems()->whereColumn('quantity_on_hand', '<=', 'reorder_level');
+    }
+
+    public function expiringSoonItems(): HasMany
+    {
+        return $this->inventoryItems()
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<=', now()->addMonth())
+            ->whereDate('expiry_date', '>=', now());
+    }
+
     public function stockReceipts(): HasMany
     {
         return $this->hasMany(StockReceipt::class);
