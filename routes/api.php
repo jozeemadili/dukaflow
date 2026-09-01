@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/inventory', [InventoryController::class, 'store']);
             Route::get('/inventory/categories', [InventoryController::class, 'categories']);
             Route::get('/inventory/lookup-barcode/{code}', [InventoryController::class, 'lookupBarcode']);
+            Route::post('/inventory/barcode-labels', [InventoryController::class, 'barcodeLabelsPdf']);
             Route::get('/inventory/{item}', [InventoryController::class, 'show']);
             Route::patch('/inventory/{item}', [InventoryController::class, 'update']);
             Route::delete('/inventory/{item}', [InventoryController::class, 'destroy']);

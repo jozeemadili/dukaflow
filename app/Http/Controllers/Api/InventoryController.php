@@ -7,8 +7,10 @@ use App\Http\Resources\InventoryItemResource;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class InventoryController extends Controller
 {
@@ -158,6 +160,64 @@ class InventoryController extends Controller
         $item->increment('quantity_on_hand', $delta);
 
         return new InventoryItemResource($item->fresh());
+    }
+
+    /**
+     * Printable barcode label sheet (3-up, name + price optional) for the
+     * given products — same PDF layout the web portal's "Barcode labels"
+     * page generates, so labels printed from either place look identical.
+     */
+    public function barcodeLabelsPdf(Request $request)
+    {
+        $data = $request->validate([
+            'item_ids' => ['required', 'array', 'min:1'],
+            'item_ids.*' => ['integer'],
+            'show_product_name' => ['sometimes', 'boolean'],
+            'show_price' => ['sometimes', 'boolean'],
+            'copies' => ['sometimes', 'integer', 'min:1', 'max:20'],
+        ]);
+
+        $merchant = $request->user()->merchant;
+
+        $items = InventoryItem::where('merchant_id', $merchant->id)
+            ->whereIn('id', $data['item_ids'])
+            ->whereNotNull('barcode')
+            ->orderBy('name')
+            ->get();
+
+        abort_if($items->isEmpty(), 422, 'Select at least one product with a barcode.');
+
+        $generator = new BarcodeGeneratorPNG;
+        $copies = max(1, (int) ($data['copies'] ?? 1));
+        $labels = [];
+
+        foreach ($items as $item) {
+            $dataUri = 'data:image/png;base64,'.base64_encode(
+                $generator->getBarcode($item->barcode, $generator::TYPE_CODE_128, 2, 40)
+            );
+
+            for ($i = 0; $i < $copies; $i++) {
+                $labels[] = [
+                    'name' => $item->name,
+                    'price' => $item->unit_price,
+                    'barcode' => $item->barcode,
+                    'image' => $dataUri,
+                ];
+            }
+        }
+
+        $pdf = Pdf::loadView('exports.barcode-labels', [
+            'merchant' => $merchant,
+            'shopLogoDataUri' => $merchant->logoDataUri(),
+            'labels' => $labels,
+            'showProductName' => $data['show_product_name'] ?? true,
+            'showPrice' => $data['show_price'] ?? true,
+        ])->setPaper('a4', 'portrait');
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="barcode-labels.pdf"',
+        ]);
     }
 
     public function categories(Request $request)
