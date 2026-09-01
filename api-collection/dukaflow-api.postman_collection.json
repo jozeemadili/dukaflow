@@ -559,6 +559,39 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Barcode labels PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventory/barcode-labels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inventory",
+                "barcode-labels"
+              ]
+            },
+            "description": "Returns the PDF binary directly (application/pdf) — same 3-up Code128 label sheet as the web portal's Barcode labels page. Only products with a barcode are included; item_ids belonging to another merchant or without a barcode are silently skipped.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item_ids\": [1],\n  \"show_product_name\": true,\n  \"show_price\": true,\n  \"copies\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -852,7 +885,7 @@
                 "checkout"
               ]
             },
-            "description": "If the discount exceeds the cashier's limit, returns 422 with needs_approval:true \u2014 retry with approver_email/approver_password from a supervisor/manager.",
+            "description": "If the discount exceeds the cashier's limit, returns 422 with needs_approval:true — retry with approver_email/approver_password from a supervisor/manager.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"items\": [\n    {\n      \"inventory_item_id\": 1,\n      \"quantity\": 2,\n      \"discount_type\": null,\n      \"discount_value\": null\n    }\n  ],\n  \"customer_id\": null,\n  \"overall_discount_type\": null,\n  \"overall_discount_value\": null,\n  \"payment_method_id\": null,\n  \"amount_tendered\": 10000,\n  \"approver_email\": null,\n  \"approver_password\": null\n}",
