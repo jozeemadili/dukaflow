@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'internal' => \App\Http\Middleware\EnsureUserIsInternal::class,
             'merchant' => \App\Http\Middleware\EnsureUserIsMerchant::class,
+            'api.merchant' => \App\Http\Middleware\EnsureApiUserIsMerchant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
