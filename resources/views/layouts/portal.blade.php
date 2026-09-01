@@ -58,38 +58,32 @@
                     <a href="{{ route('portal.pos.index') }}" class="icon-dock-item {{ request()->routeIs('portal.pos.*') ? 'is-active' : '' }}">
                         <x-icon.pos class="h-4 w-4 shrink-0" /> Point of Sale
                     </a>
+                    <a href="{{ route('portal.stores.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stores.*') ? 'is-active' : '' }}">
+                        <x-icon.store class="h-4 w-4 shrink-0" /> Stores
+                    </a>
+                    <a href="{{ route('portal.stock-receipts.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stock-receipts.*') ? 'is-active' : '' }}">
+                        <x-icon.stock-receipt class="h-4 w-4 shrink-0" /> Stock Receipts
+                    </a>
+                    <a href="{{ route('portal.inventory.index') }}" class="icon-dock-item {{ request()->routeIs('portal.inventory.*') ? 'is-active' : '' }}">
+                        <x-icon.inventory class="h-4 w-4 shrink-0" /> Inventory
+                    </a>
+                    <a href="{{ route('portal.expenses.index') }}" class="icon-dock-item {{ request()->routeIs('portal.expenses.*') ? 'is-active' : '' }}">
+                        <x-icon.expenses class="h-4 w-4 shrink-0" /> Expenses
+                    </a>
+                    <a href="{{ route('portal.customers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.customers.*') ? 'is-active' : '' }}">
+                        <x-icon.customer class="h-4 w-4 shrink-0" /> Customers
+                    </a>
                     <a href="{{ route('portal.sales.index') }}" class="icon-dock-item {{ request()->routeIs('portal.sales.*') ? 'is-active' : '' }}">
                         <x-icon.sales class="h-4 w-4 shrink-0" /> Sales
                     </a>
                     <a href="{{ route('portal.invoices.index') }}" class="icon-dock-item {{ request()->routeIs('portal.invoices.*') ? 'is-active' : '' }}">
                         <x-icon.invoice class="h-4 w-4 shrink-0" /> Invoices
                     </a>
-                    <a href="{{ route('portal.expenses.index') }}" class="icon-dock-item {{ request()->routeIs('portal.expenses.*') ? 'is-active' : '' }}">
-                        <x-icon.expenses class="h-4 w-4 shrink-0" /> Expenses
-                    </a>
-                    <a href="{{ route('portal.inventory.index') }}" class="icon-dock-item {{ request()->routeIs('portal.inventory.*') ? 'is-active' : '' }}">
-                        <x-icon.inventory class="h-4 w-4 shrink-0" /> Inventory
-                    </a>
-                    <a href="{{ route('portal.stock-receipts.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stock-receipts.*') ? 'is-active' : '' }}">
-                        <x-icon.stock-receipt class="h-4 w-4 shrink-0" /> Stock Receipts
-                    </a>
                     <a href="{{ route('portal.suppliers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.suppliers.*') ? 'is-active' : '' }}">
                         <x-icon.suppliers class="h-4 w-4 shrink-0" /> Suppliers
                     </a>
-                    <a href="{{ route('portal.stores.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stores.*') ? 'is-active' : '' }}">
-                        <x-icon.store class="h-4 w-4 shrink-0" /> Stores
-                    </a>
-                    <a href="{{ route('portal.customers.index') }}" class="icon-dock-item {{ request()->routeIs('portal.customers.*') ? 'is-active' : '' }}">
-                        <x-icon.customer class="h-4 w-4 shrink-0" /> Customers
-                    </a>
                     <a href="{{ route('portal.payments.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payments.*') ? 'is-active' : '' }}">
                         <x-icon.receipt class="h-4 w-4 shrink-0" /> Payments
-                    </a>
-                    <a href="{{ route('portal.payment-methods.index') }}" class="icon-dock-item {{ request()->routeIs('portal.payment-methods.*') ? 'is-active' : '' }}">
-                        <x-icon.wallet class="h-4 w-4 shrink-0" /> Payment Methods
-                    </a>
-                    <a href="{{ route('portal.kyc.index') }}" class="icon-dock-item {{ request()->routeIs('portal.kyc.*') ? 'is-active' : '' }}">
-                        <x-icon.shield class="h-4 w-4 shrink-0" /> KYC Documents
                     </a>
 
                     @if(config('dukaflow.credit_engine_enabled'))
@@ -100,20 +94,53 @@
                         @endcan
                     @endif
 
-                    @can('manage-own-staff')
-                    <a href="{{ route('portal.staff.index') }}" class="icon-dock-item {{ request()->routeIs('portal.staff.*') ? 'is-active' : '' }}">
-                        <x-icon.users class="h-4 w-4 shrink-0" /> Staff
-                    </a>
-                    <a href="{{ route('portal.branding.index') }}" class="icon-dock-item {{ request()->routeIs('portal.branding.*') ? 'is-active' : '' }}">
-                        <x-icon.palette class="h-4 w-4 shrink-0" /> Branding
-                    </a>
-                    @endcan
+                    @php
+                        $inSystemSettings = request()->routeIs('portal.payment-methods.*')
+                            || request()->routeIs('portal.kyc.*')
+                            || request()->routeIs('portal.staff.*')
+                            || request()->routeIs('portal.branding.*')
+                            || request()->routeIs('portal.discount-limits.*');
+                    @endphp
+                    <div x-data="{ settingsOpen: {{ $inSystemSettings ? 'true' : 'false' }} }">
+                        <button
+                            type="button"
+                            @click.stop="settingsOpen = !settingsOpen"
+                            class="icon-dock-item w-full justify-between {{ $inSystemSettings ? 'is-active' : '' }}"
+                        >
+                            <span class="flex items-center gap-2.5">
+                                <x-icon.settings class="h-4 w-4 shrink-0" /> System Settings
+                            </span>
+                            <svg
+                                class="h-3.5 w-3.5 shrink-0 transition-transform duration-150"
+                                :class="settingsOpen ? 'rotate-180' : ''"
+                                viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
 
-                    @can('manage-discount-limits')
-                    <a href="{{ route('portal.discount-limits.index') }}" class="icon-dock-item {{ request()->routeIs('portal.discount-limits.*') ? 'is-active' : '' }}">
-                        <x-icon.percent class="h-4 w-4 shrink-0" /> Discount Limits
-                    </a>
-                    @endcan
+                        <div x-show="settingsOpen" x-cloak class="mt-1 ml-3 pl-3 border-l border-white/10 space-y-1">
+                            <a href="{{ route('portal.payment-methods.index') }}" class="icon-dock-item text-[13px] {{ request()->routeIs('portal.payment-methods.*') ? 'is-active' : '' }}">
+                                <x-icon.wallet class="h-4 w-4 shrink-0" /> Payment Methods
+                            </a>
+                            <a href="{{ route('portal.kyc.index') }}" class="icon-dock-item text-[13px] {{ request()->routeIs('portal.kyc.*') ? 'is-active' : '' }}">
+                                <x-icon.shield class="h-4 w-4 shrink-0" /> KYC Documents
+                            </a>
+                            @can('manage-own-staff')
+                            <a href="{{ route('portal.staff.index') }}" class="icon-dock-item text-[13px] {{ request()->routeIs('portal.staff.*') ? 'is-active' : '' }}">
+                                <x-icon.users class="h-4 w-4 shrink-0" /> Staff
+                            </a>
+                            <a href="{{ route('portal.branding.index') }}" class="icon-dock-item text-[13px] {{ request()->routeIs('portal.branding.*') ? 'is-active' : '' }}">
+                                <x-icon.palette class="h-4 w-4 shrink-0" /> Branding
+                            </a>
+                            @endcan
+                            @can('manage-discount-limits')
+                            <a href="{{ route('portal.discount-limits.index') }}" class="icon-dock-item text-[13px] {{ request()->routeIs('portal.discount-limits.*') ? 'is-active' : '' }}">
+                                <x-icon.percent class="h-4 w-4 shrink-0" /> Discount Limits
+                            </a>
+                            @endcan
+                        </div>
+                    </div>
                 </nav>
 
                 <div class="pt-3 mt-3 border-t border-white/10">
