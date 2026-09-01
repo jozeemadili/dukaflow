@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\InvoicePublicController;
 use App\Livewire\Admin;
 use App\Livewire\Auth\CompleteRegistration;
 use App\Livewire\Auth\ForgotPassword;
@@ -18,6 +19,10 @@ Route::get('/', function () {
 
     return redirect()->route('login');
 });
+
+Route::get('/i/{invoice}/pdf', [InvoicePublicController::class, 'download'])
+    ->name('invoices.public-pdf')
+    ->middleware('signed');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');

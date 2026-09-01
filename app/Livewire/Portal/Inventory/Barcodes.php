@@ -18,6 +18,10 @@ class Barcodes extends Component
     /** @var array<int, string> */
     public array $copies = [];
 
+    public bool $showProductName = true;
+
+    public bool $showPrice = true;
+
     public function mount(): void
     {
         $items = InventoryItem::where('merchant_id', Auth::user()->merchant_id)
@@ -80,7 +84,10 @@ class Barcodes extends Component
 
         $pdf = Pdf::loadView('exports.barcode-labels', [
             'merchant' => $merchant,
+            'shopLogoDataUri' => $merchant->logoDataUri(),
             'labels' => $labels,
+            'showProductName' => $this->showProductName,
+            'showPrice' => $this->showPrice,
         ])->setPaper('a4', 'portrait');
 
         return response()->streamDownload(fn () => print ($pdf->output()), 'barcode-labels.pdf', [

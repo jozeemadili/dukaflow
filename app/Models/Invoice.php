@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\URL;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -103,6 +106,16 @@ class Invoice extends Model
     public function balanceDue(): float
     {
         return max(0, (float) $this->total - (float) $this->amount_paid);
+    }
+
+    public function qrDataUri(): string
+    {
+        $url = URL::signedRoute('invoices.public-pdf', ['invoice' => $this->id]);
+
+        $writer = new PngWriter;
+        $result = $writer->write(new QrCode(data: $url, size: 240, margin: 4));
+
+        return 'data:image/png;base64,'.base64_encode($result->getString());
     }
 
     public function statusLabel(): string

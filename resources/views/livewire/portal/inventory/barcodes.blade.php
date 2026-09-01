@@ -12,6 +12,18 @@
             </div>
         </div>
 
+        <div class="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-hairline">
+            <span class="text-[12px] text-ink-mute">Every label always shows your shop name and logo (if set) plus the barcode. Choose what else to include:</span>
+            <label class="flex items-center gap-1.5 text-[12px] text-ink-secondary">
+                <input type="checkbox" wire:model="showProductName" class="rounded border-hairline-input">
+                Product name
+            </label>
+            <label class="flex items-center gap-1.5 text-[12px] text-ink-secondary">
+                <input type="checkbox" wire:model="showPrice" class="rounded border-hairline-input">
+                Price
+            </label>
+        </div>
+
         @if($withoutBarcodeCount > 0)
             <div class="mt-3 rounded-lg bg-canvas-cream border border-lemon/20 text-lemon px-4 py-2.5 text-[13px]">
                 {{ $withoutBarcodeCount }} product{{ $withoutBarcodeCount > 1 ? 's have' : ' has' }} no barcode assigned yet, so {{ $withoutBarcodeCount > 1 ? "they aren't" : "it isn't" }} listed here. Add a barcode from the product's page first.

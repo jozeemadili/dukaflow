@@ -37,10 +37,16 @@
         .totals-table { width: 100%; margin-top: 12px; }
         .totals-table td { padding: 4px 10px; border: none; font-size: 11px; }
         .totals-table .grand td { font-weight: bold; font-size: 14px; background: #f6f9fc; border-top: 2px solid #{{ ltrim($brandColor, '#') }}; padding-top: 8px; padding-bottom: 8px; }
+        .section-title { font-size: 11px; font-weight: bold; color: #1a1a1a; margin: 24px 0 6px 0; }
         .notes { margin-top: 24px; padding-top: 12px; border-top: 1px solid #eef1f5; font-size: 10px; color: #6b7280; }
-        .footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid #eef1f5; text-align: center; }
+        .footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid #eef1f5; }
+        .footer .qr-cell { width: 80px; vertical-align: middle; }
+        .footer .qr-cell img { width: 62px; height: 62px; }
+        .footer .qr-caption { font-size: 7px; color: #b0b6bf; margin: 2px 0 0 0; }
+        .footer .powered-cell { vertical-align: middle; text-align: center; }
         .footer .powered { font-size: 10px; font-weight: bold; color: #9ca3af; margin: 0 0 2px 0; }
         .footer .contacts { font-size: 9px; color: #b0b6bf; margin: 0; }
+        .footer .spacer-cell { width: 80px; }
     </style>
 </head>
 <body>
@@ -181,6 +187,28 @@
             </tr>
         </table>
 
+        @if($invoice->payments->isNotEmpty())
+            <p class="section-title">Payment history</p>
+            <table class="items">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Channel</th>
+                        <th class="right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($invoice->payments->sortBy('payment_date') as $payment)
+                        <tr>
+                            <td>{{ $payment->payment_date->format('d M Y') }}</td>
+                            <td>{{ $payment->paymentMethod?->name ?? '—' }}</td>
+                            <td class="right">TZS {{ number_format($payment->amount, 0) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+
         @if($invoice->notes)
             <div class="notes">
                 <strong>Notes:</strong> {{ $invoice->notes }}
@@ -191,12 +219,23 @@
             @if($invoice->isDraft())
                 <p class="notes" style="border-top: none; margin-top: 0; padding-top: 0;">This is a proforma invoice for review only. Prices and quantities are subject to change until approved.</p>
             @endif
-            <p class="powered">Powered by DukaFlow</p>
-            <p class="contacts">
-                {{ config('dukaflow.support_email') }}
-                @if(config('dukaflow.support_phone')) &middot; {{ config('dukaflow.support_phone') }} @endif
-                @if(config('dukaflow.support_address')) &middot; {{ config('dukaflow.support_address') }} @endif
-            </p>
+            <table class="layout">
+                <tr>
+                    <td class="qr-cell">
+                        <img src="{{ $qrDataUri }}" alt="">
+                        <p class="qr-caption">Scan to get this PDF</p>
+                    </td>
+                    <td class="powered-cell">
+                        <p class="powered">Powered by DukaFlow</p>
+                        <p class="contacts">
+                            {{ config('dukaflow.support_email') }}
+                            @if(config('dukaflow.support_phone')) &middot; {{ config('dukaflow.support_phone') }} @endif
+                            @if(config('dukaflow.support_address')) &middot; {{ config('dukaflow.support_address') }} @endif
+                        </p>
+                    </td>
+                    <td class="spacer-cell">&nbsp;</td>
+                </tr>
+            </table>
         </div>
     </div>
 </body>

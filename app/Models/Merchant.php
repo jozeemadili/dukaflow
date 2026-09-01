@@ -40,6 +40,23 @@ class Merchant extends Model implements HasMedia
         return $this->brand_color ?: self::DEFAULT_BRAND_COLOR;
     }
 
+    public function logoDataUri(): ?string
+    {
+        $logo = $this->logo();
+
+        if (! $logo) {
+            return null;
+        }
+
+        $path = $logo->getPath();
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return 'data:'.$logo->mime_type.';base64,'.base64_encode(file_get_contents($path));
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
