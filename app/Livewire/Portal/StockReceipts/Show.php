@@ -8,11 +8,15 @@ use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\StockReceiptItem;
 use App\Models\SupplierTransaction;
+use App\Services\InventoryExcelImporter;
+use App\Services\InventoryExcelTemplate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 #[Layout('layouts.portal', ['title' => 'Stock Receipt'])]
 class Show extends Component
@@ -47,6 +51,10 @@ class Show extends Component
     public string $new_branch_id = '';
 
     public $document;
+
+    public bool $showImportForm = false;
+
+    public $importFile;
 
     public function mount(StockReceipt $receipt)
     {
@@ -177,6 +185,63 @@ class Show extends Component
         ]);
 
         $this->receipt->update(['total_amount' => $this->receipt->items()->sum('subtotal')]);
+    }
+
+    public function downloadEmptyTemplate()
+    {
+        return $this->streamSpreadsheet(InventoryExcelTemplate::empty(), 'stock-receipt-import-template.xlsx');
+    }
+
+    public function downloadCurrentProducts()
+    {
+        return $this->streamSpreadsheet(InventoryExcelTemplate::forMerchant(Auth::user()->merchant), 'inventory-current-products.xlsx');
+    }
+
+    protected function streamSpreadsheet(Spreadsheet $spreadsheet, string $filename)
+    {
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function importExcel()
+    {
+        abort_unless($this->receipt->isPending(), 403);
+
+        $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls']]);
+
+        $merchant = Auth::user()->merchant;
+        ['rows' => $rows, 'errors' => $errors] = InventoryExcelImporter::parse($this->importFile->getRealPath());
+
+        $count = 0;
+
+        DB::transaction(function () use ($merchant, $rows, &$count) {
+            foreach ($rows as $row) {
+                if ($row['quantity'] <= 0) {
+                    continue;
+                }
+
+                $result = InventoryExcelImporter::resolveItem($merchant, $row);
+                $this->storeLine($result['item']->id, $row['quantity'], $row['unit_cost'] ?? 0);
+                $count++;
+            }
+        });
+
+        $this->reset(['importFile', 'showImportForm']);
+
+        $summary = $count === 0
+            ? 'No rows with a quantity greater than 0 were found in that file.'
+            : "{$count} line".($count === 1 ? '' : 's').' added from the uploaded file.';
+
+        if (! empty($errors)) {
+            $summary .= ' '.count($errors).' row'.(count($errors) === 1 ? '' : 's').' skipped: '.implode(' ', array_slice($errors, 0, 5));
+        }
+
+        session()->flash('status', $summary);
     }
 
     public function removeItem(int $lineId)

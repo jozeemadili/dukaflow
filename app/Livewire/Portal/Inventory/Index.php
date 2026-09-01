@@ -6,12 +6,16 @@ use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
+use App\Services\InventoryExcelImporter;
+use App\Services\InventoryExcelTemplate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 #[Layout('layouts.portal', ['title' => 'Inventory'])]
 class Index extends Component
@@ -57,6 +61,10 @@ class Index extends Component
     public string $movementQuantity = '';
 
     public string $categoryFilter = '';
+
+    public bool $showImportForm = false;
+
+    public $importFile;
 
     public function updatedName(string $value): void
     {
@@ -189,6 +197,71 @@ class Index extends Component
 
         $this->reset(['movingItemId', 'movementQuantity']);
         session()->flash('status', 'Stock movement recorded.');
+    }
+
+    public function downloadEmptyTemplate()
+    {
+        return $this->streamSpreadsheet(InventoryExcelTemplate::empty(), 'inventory-import-template.xlsx');
+    }
+
+    public function downloadCurrentProducts()
+    {
+        return $this->streamSpreadsheet(InventoryExcelTemplate::forMerchant(Auth::user()->merchant), 'inventory-current-products.xlsx');
+    }
+
+    protected function streamSpreadsheet(Spreadsheet $spreadsheet, string $filename)
+    {
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function importExcel()
+    {
+        $this->validate(['importFile' => ['required', 'file', 'mimes:xlsx,xls']]);
+
+        $merchant = Auth::user()->merchant;
+        ['rows' => $rows, 'errors' => $errors] = InventoryExcelImporter::parse($this->importFile->getRealPath());
+
+        $created = 0;
+        $restocked = 0;
+
+        DB::transaction(function () use ($merchant, $rows, &$created, &$restocked) {
+            foreach ($rows as $row) {
+                $result = InventoryExcelImporter::resolveItem($merchant, $row);
+                $result['created'] ? $created++ : $restocked++;
+
+                if ($row['quantity'] > 0) {
+                    $result['item']->increment('quantity_on_hand', $row['quantity']);
+
+                    StockMovement::create([
+                        'merchant_id' => $merchant->id,
+                        'inventory_item_id' => $result['item']->id,
+                        'type' => StockMovement::TYPE_IN,
+                        'quantity' => $row['quantity'],
+                        'reference' => 'excel_import',
+                        'movement_date' => now()->toDateString(),
+                        'recorded_by' => Auth::id(),
+                    ]);
+                }
+            }
+        });
+
+        $this->reset(['importFile', 'showImportForm']);
+
+        $summary = $created + $restocked === 0
+            ? 'No rows found in that file.'
+            : "Import complete: {$created} new product".($created === 1 ? '' : 's').", {$restocked} existing product".($restocked === 1 ? '' : 's').' restocked.';
+
+        if (! empty($errors)) {
+            $summary .= ' '.count($errors).' row'.(count($errors) === 1 ? '' : 's').' skipped: '.implode(' ', array_slice($errors, 0, 5));
+        }
+
+        session()->flash('status', $summary);
     }
 
     public function render()

@@ -6,8 +6,35 @@
         <a href="{{ route('portal.inventory.barcodes') }}" class="shrink-0 self-start inline-flex items-center justify-center gap-2 rounded-pill font-normal leading-none transition bg-canvas text-ink border border-ink/20 hover:bg-canvas-soft px-4 py-2 text-[15px]">
             <x-icon.barcode class="h-4 w-4" /> Print barcode labels
         </a>
+        <x-ui.button variant="secondary" wire:click="$toggle('showImportForm')" class="shrink-0 self-start">
+            {{ $showImportForm ? 'Cancel' : '+ Import from Excel' }}
+        </x-ui.button>
         <p class="text-[12px] text-ink-mute">Receiving stock from a supplier? Use <a href="{{ route('portal.stock-receipts.index') }}" class="text-primary hover:text-primary-deep">Stock Receipts</a> so it goes through approval before quantities update.</p>
     </div>
+
+    @if($showImportForm)
+        <x-ui.card>
+            <h2 class="text-[15px] text-ink-secondary mb-1">Import inventory from Excel</h2>
+            <p class="text-[12px] text-ink-mute mb-4">
+                Barcode is how we tell products apart — a row with a barcode that already exists just adds to that product's stock, so you won't get duplicates. Leave Barcode blank on a new product and we'll generate one for you. Any existing product that doesn't have a barcode yet gets one assigned automatically when you download the current products file below.
+            </p>
+
+            <div class="flex flex-wrap gap-3 mb-4">
+                <x-ui.button type="button" variant="secondary" size="sm" wire:click="downloadEmptyTemplate" target="downloadEmptyTemplate">Download empty template</x-ui.button>
+                <x-ui.button type="button" variant="secondary" size="sm" wire:click="downloadCurrentProducts" target="downloadCurrentProducts">Download current products (with barcodes)</x-ui.button>
+            </div>
+
+            <form wire:submit="importExcel" class="space-y-2">
+                <label class="block text-[13px] text-ink-mute mb-1.5">Upload filled-in spreadsheet</label>
+                <input type="file" wire:model="importFile" accept=".xlsx,.xls" class="text-[13px] text-ink-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-pill file:border-0 file:text-[12px] file:bg-primary-subtle/40 file:text-primary-deep">
+                @error('importFile') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                <div wire:loading wire:target="importFile" class="text-[12px] text-ink-mute">Uploading…</div>
+                <div>
+                    <x-ui.button type="submit" target="importExcel">Upload &amp; import</x-ui.button>
+                </div>
+            </form>
+        </x-ui.card>
+    @endif
 
     @if($expiringSoon->isNotEmpty())
         <div class="rounded-lg bg-canvas-cream border border-lemon/20 text-lemon px-4 py-2.5 text-[13px]">
