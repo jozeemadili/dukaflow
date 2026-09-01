@@ -11,7 +11,11 @@
                     default => 'neutral',
                 }">{{ $invoice->statusLabel() }}</x-ui.badge>
             </div>
-            <div class="flex gap-2">
+            <div class="flex items-center gap-3">
+                <label class="flex items-center gap-1.5 text-[12px] text-ink-secondary">
+                    <input type="checkbox" wire:model="includeImages" class="rounded border-hairline-input">
+                    Include product images
+                </label>
                 <x-ui.button variant="secondary" size="sm" wire:click="downloadPdf" target="downloadPdf">
                     Download {{ $invoice->isDraft() ? 'Proforma' : 'Invoice' }} PDF
                 </x-ui.button>

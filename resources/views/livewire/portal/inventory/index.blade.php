@@ -3,6 +3,9 @@
         <x-ui.button wire:click="$toggle('showItemForm')" class="shrink-0 self-start">
             {{ $showItemForm ? 'Cancel' : '+ Add inventory item' }}
         </x-ui.button>
+        <a href="{{ route('portal.inventory.barcodes') }}" class="shrink-0 self-start inline-flex items-center justify-center gap-2 rounded-pill font-normal leading-none transition bg-canvas text-ink border border-ink/20 hover:bg-canvas-soft px-4 py-2 text-[15px]">
+            <x-icon.barcode class="h-4 w-4" /> Print barcode labels
+        </a>
         <p class="text-[12px] text-ink-mute">Receiving stock from a supplier? Use <a href="{{ route('portal.stock-receipts.index') }}" class="text-primary hover:text-primary-deep">Stock Receipts</a> so it goes through approval before quantities update.</p>
     </div>
 

@@ -31,6 +31,8 @@
         table.items { width: 100%; border-collapse: collapse; margin-top: 20px; }
         table.items th { background: #{{ ltrim($brandColor, '#') }}; color: #ffffff; text-align: left; padding: 8px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; }
         table.items td { padding: 8px 10px; border-bottom: 1px solid #eef1f5; font-size: 11px; }
+        .item-thumb { width: 32px; height: 32px; }
+        .item-thumb-placeholder { display: block; width: 32px; height: 32px; background: #eef1f5; border-radius: 4px; }
         .right { text-align: right; }
         .totals-table { width: 100%; margin-top: 12px; }
         .totals-table td { padding: 4px 10px; border: none; font-size: 11px; }
@@ -113,6 +115,9 @@
         <table class="items">
             <thead>
                 <tr>
+                    @if($includeImages)
+                        <th style="width: 44px;">&nbsp;</th>
+                    @endif
                     <th>Item</th>
                     <th class="right">Qty</th>
                     <th class="right">Unit price</th>
@@ -123,6 +128,15 @@
             <tbody>
                 @foreach($invoice->items as $line)
                     <tr>
+                        @if($includeImages)
+                            <td style="width: 44px;">
+                                @if(isset($itemImages[$line->id]))
+                                    <img src="{{ $itemImages[$line->id] }}" class="item-thumb" alt="">
+                                @else
+                                    <span class="item-thumb-placeholder"></span>
+                                @endif
+                            </td>
+                        @endif
                         <td>{{ $line->item_name }}</td>
                         <td class="right">{{ rtrim(rtrim(number_format($line->quantity, 2, '.', ''), '0'), '.') }}</td>
                         <td class="right">{{ number_format($line->unit_price, 0) }}</td>

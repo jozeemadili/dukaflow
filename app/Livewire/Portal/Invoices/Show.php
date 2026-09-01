@@ -63,6 +63,8 @@ class Show extends Component
 
     public string $paymentReference = '';
 
+    public bool $includeImages = false;
+
     public function mount(Invoice $invoice)
     {
         abort_unless($invoice->merchant_id === Auth::user()->merchant_id, 403);
@@ -371,6 +373,8 @@ class Show extends Component
             'merchant' => $merchant,
             'logoDataUri' => $this->logoDataUri($merchant),
             'brandColor' => $merchant->brandColor(),
+            'includeImages' => $this->includeImages,
+            'itemImages' => $this->includeImages ? $this->itemImagesDataUris() : [],
         ])->setPaper('a4', 'portrait');
 
         $filename = ($this->invoice->isDraft() ? 'proforma-' : 'invoice-').$this->invoice->number.'.pdf';
@@ -395,6 +399,30 @@ class Show extends Component
         }
 
         return 'data:'.$logo->mime_type.';base64,'.base64_encode(file_get_contents($path));
+    }
+
+    /** @return array<int, string> invoice item id => data URI */
+    protected function itemImagesDataUris(): array
+    {
+        $map = [];
+
+        foreach ($this->invoice->items()->with('inventoryItem')->get() as $line) {
+            $media = $line->inventoryItem?->image();
+
+            if (! $media) {
+                continue;
+            }
+
+            $path = $media->getPath();
+
+            if (! is_file($path)) {
+                continue;
+            }
+
+            $map[$line->id] = 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($path));
+        }
+
+        return $map;
     }
 
     public function render()
