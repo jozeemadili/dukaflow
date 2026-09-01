@@ -188,18 +188,18 @@
                                 <h3 class="text-[13px] font-medium text-ink">Notifications</h3>
                             </div>
                             <div class="max-h-80 overflow-y-auto divide-y divide-hairline">
-                                @forelse($notifyLowStock as $item)
+                                @foreach($notifyLowStock as $item)
                                     <a href="{{ route('portal.inventory.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-canvas-soft">
                                         <span class="mt-1 h-2 w-2 rounded-full bg-ruby shrink-0"></span>
                                         <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $item->name }}</strong> is low on stock — {{ rtrim(rtrim($item->quantity_on_hand, '0'), '.') }} {{ $item->unit }} left.</span>
                                     </a>
-                                @endforelse
-                                @forelse($notifyExpiring as $item)
+                                @endforeach
+                                @foreach($notifyExpiring as $item)
                                     <a href="{{ route('portal.inventory.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-canvas-soft">
                                         <span class="mt-1 h-2 w-2 rounded-full bg-lemon shrink-0"></span>
                                         <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $item->name }}</strong> expires {{ $item->expiry_date->format('d M Y') }}.</span>
                                     </a>
-                                @endforelse
+                                @endforeach
                                 @if($notifyCount === 0)
                                     <p class="px-4 py-6 text-center text-[12.5px] text-ink-mute">You're all caught up.</p>
                                 @endif
