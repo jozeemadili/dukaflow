@@ -1564,14 +1564,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/dashboard",
+              "raw": "{{base_url}}/dashboard?period=month",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
               ]
-            }
+            },
+            "description": "period: week | month | year (defaults to month if omitted or invalid). Controls both the sales_total/expenses_total range and the trend granularity — week and month bucket by day, year buckets by calendar month."
           },
           "response": []
         },
