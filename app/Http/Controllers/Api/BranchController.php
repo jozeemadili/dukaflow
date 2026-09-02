@@ -44,7 +44,7 @@ class BranchController extends Controller
 
         $branch = Branch::create([...$data, 'merchant_id' => Auth::user()->merchant_id]);
 
-        return new BranchResource($branch);
+        return new BranchResource($branch->fresh());
     }
 
     protected function authorizeBranch(Request $request, Branch $branch): void
