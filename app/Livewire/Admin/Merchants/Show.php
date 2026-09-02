@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Admin\Merchants;
 
+use App\Models\BusinessType;
 use App\Models\KycDocument;
 use App\Models\Merchant;
+use App\Models\Region;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,13 +27,13 @@ class Show extends Component
 
     public string $email = '';
 
-    public string $business_type = '';
+    public string $business_type_id = '';
 
     public string $tin_number = '';
 
     public string $physical_address = '';
 
-    public string $region = '';
+    public string $region_id = '';
 
     public string $city = '';
 
@@ -50,10 +52,10 @@ class Show extends Component
         $this->owner_name = $this->merchant->owner_name;
         $this->phone = $this->merchant->phone;
         $this->email = (string) $this->merchant->email;
-        $this->business_type = (string) $this->merchant->business_type;
+        $this->business_type_id = (string) $this->merchant->business_type_id;
         $this->tin_number = (string) $this->merchant->tin_number;
         $this->physical_address = (string) $this->merchant->physical_address;
-        $this->region = (string) $this->merchant->region;
+        $this->region_id = (string) $this->merchant->region_id;
         $this->city = (string) $this->merchant->city;
         $this->subscription_tier = $this->merchant->subscription_tier;
     }
@@ -77,10 +79,10 @@ class Show extends Component
             'owner_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
-            'business_type' => ['nullable', 'string', 'max:255'],
+            'business_type_id' => ['nullable', 'exists:business_types,id'],
             'tin_number' => ['nullable', 'string', 'max:255'],
             'physical_address' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'region_id' => ['nullable', 'exists:regions,id'],
             'city' => ['nullable', 'string', 'max:255'],
             'subscription_tier' => ['required', 'in:basic,business,professional'],
         ]);
@@ -90,10 +92,10 @@ class Show extends Component
             'owner_name' => $this->owner_name,
             'phone' => $this->phone,
             'email' => $this->email ?: null,
-            'business_type' => $this->business_type ?: null,
+            'business_type_id' => $this->business_type_id ?: null,
             'tin_number' => $this->tin_number ?: null,
             'physical_address' => $this->physical_address ?: null,
-            'region' => $this->region ?: null,
+            'region_id' => $this->region_id ?: null,
             'city' => $this->city ?: null,
             'subscription_tier' => $this->subscription_tier,
         ]);
@@ -174,6 +176,8 @@ class Show extends Component
             'salesTotal' => $this->merchant->salesRecords()->sum('amount'),
             'expensesTotal' => $this->merchant->expenses()->sum('amount'),
             'users' => $this->merchant->users()->get(),
+            'businessTypes' => BusinessType::active()->orderBy('name')->get(),
+            'regions' => Region::active()->orderBy('name')->get(),
         ]);
     }
 }

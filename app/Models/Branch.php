@@ -27,6 +27,11 @@ class Branch extends Model
         return $this->hasMany(InventoryItem::class);
     }
 
+    public function storeLeases(): HasMany
+    {
+        return $this->hasMany(StoreLease::class);
+    }
+
     /**
      * @return array{stockValue: float, sellingValue: float, expectedProfit: float}
      */

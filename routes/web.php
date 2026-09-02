@@ -54,6 +54,7 @@ Route::middleware(['auth', 'internal'])->prefix('admin')->name('admin.')->group(
     Route::get('/payments', Admin\Payments\Index::class)->name('payments.index');
     Route::get('/leads', Admin\Leads\Index::class)->name('leads.index');
     Route::get('/users', Admin\Users\Index::class)->name('users.index');
+    Route::get('/business-types', Admin\BusinessTypes\Index::class)->name('business-types.index');
     Route::get('/audit-log', Admin\AuditLog\Index::class)->name('audit-log.index');
     Route::get('/credit', Admin\Credit\Index::class)->name('credit.index');
 });

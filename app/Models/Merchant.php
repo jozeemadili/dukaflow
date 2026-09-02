@@ -14,8 +14,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
-    'business_name', 'owner_name', 'phone', 'email', 'business_type',
-    'tin_number', 'physical_address', 'region', 'city',
+    'business_name', 'owner_name', 'phone', 'email', 'business_type', 'business_type_id',
+    'tin_number', 'physical_address', 'region', 'region_id', 'city',
     'kyc_status', 'subscription_tier', 'status', 'brand_color',
     'created_by_agent_id', 'reviewed_by', 'reviewed_at', 'review_notes',
 ])]
@@ -167,6 +167,16 @@ class Merchant extends Model implements HasMedia
         return $this->hasMany(PaymentRecord::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function storeLeases(): HasMany
+    {
+        return $this->hasMany(StoreLease::class);
+    }
+
     public function cashFlowSnapshots(): HasMany
     {
         return $this->hasMany(CashFlowSnapshot::class);
@@ -185,6 +195,21 @@ class Merchant extends Model implements HasMedia
     public function createdByAgent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_agent_id');
+    }
+
+    /**
+     * Named *Ref (not businessType/region) so it doesn't collide with the
+     * legacy free-text `business_type`/`region` string columns kept for
+     * backward compatibility on old records.
+     */
+    public function businessTypeRef(): BelongsTo
+    {
+        return $this->belongsTo(BusinessType::class, 'business_type_id');
+    }
+
+    public function regionRef(): BelongsTo
+    {
+        return $this->belongsTo(Region::class, 'region_id');
     }
 
     public function reviewer(): BelongsTo

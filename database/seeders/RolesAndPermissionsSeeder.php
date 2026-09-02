@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'support-merchants',
         'manage-leads',
         'view-audit-log',
+        'manage-lookup-data',
 
         // Merchant portal
         'manage-own-business',

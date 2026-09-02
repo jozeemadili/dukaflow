@@ -94,6 +94,12 @@
                     </a>
                     @endcan
 
+                    @can('manage-lookup-data')
+                    <a href="{{ route('admin.business-types.index') }}" class="icon-dock-item {{ request()->routeIs('admin.business-types.*') ? 'is-active' : '' }}">
+                        <x-icon.settings class="h-4 w-4 shrink-0" /> Business Types
+                    </a>
+                    @endcan
+
                     @can('view-audit-log')
                     <a href="{{ route('admin.audit-log.index') }}" class="icon-dock-item {{ request()->routeIs('admin.audit-log.*') ? 'is-active' : '' }}">
                         <x-icon.log class="h-4 w-4 shrink-0" /> Audit Log

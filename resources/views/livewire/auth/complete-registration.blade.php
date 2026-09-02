@@ -14,10 +14,20 @@
                 <x-ui.input wire:model="phone" label="Phone" id="cr_phone" />
                 @error('phone') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
             </div>
-            <x-ui.input wire:model="region" label="Region" id="cr_region" />
+            <x-ui.select wire:model="region_id" label="Region" id="cr_region_id">
+                <option value="">Select region</option>
+                @foreach($regions as $r)
+                    <option value="{{ $r->id }}">{{ $r->name }}</option>
+                @endforeach
+            </x-ui.select>
         </div>
 
-        <x-ui.input wire:model="business_type" label="Business type" placeholder="e.g. Duka, Pharmacy, Restaurant" id="cr_business_type" />
+        <x-ui.select wire:model="business_type_id" label="Business type" id="cr_business_type_id">
+            <option value="">Select business type</option>
+            @foreach($businessTypes as $t)
+                <option value="{{ $t->id }}">{{ $t->name }}</option>
+            @endforeach
+        </x-ui.select>
 
         <x-ui.input type="email" value="{{ $email }}" label="Email" id="cr_email" disabled class="opacity-60" />
 

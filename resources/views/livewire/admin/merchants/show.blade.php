@@ -38,8 +38,18 @@
                 @error('email') <p class="text-ruby text-[12px]">{{ $message }}</p> @enderror
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <x-ui.input wire:model="business_type" label="Business type" id="edit_business_type" />
-                    <x-ui.input wire:model="region" label="Region" id="edit_region" />
+                    <x-ui.select wire:model="business_type_id" label="Business type" id="edit_business_type_id">
+                        <option value="">Select business type</option>
+                        @foreach($businessTypes as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        @endforeach
+                    </x-ui.select>
+                    <x-ui.select wire:model="region_id" label="Region" id="edit_region_id">
+                        <option value="">Select region</option>
+                        @foreach($regions as $r)
+                            <option value="{{ $r->id }}">{{ $r->name }}</option>
+                        @endforeach
+                    </x-ui.select>
                     <x-ui.input wire:model="city" label="City" id="edit_city" />
                 </div>
 
@@ -64,8 +74,8 @@
                 <div><p class="text-ink-mute mb-1">Owner</p><p class="text-ink font-medium">{{ $merchant->owner_name }}</p></div>
                 <div><p class="text-ink-mute mb-1">Phone</p><p class="text-ink font-medium tnum">{{ $merchant->phone }}</p></div>
                 <div><p class="text-ink-mute mb-1">Email</p><p class="text-ink font-medium">{{ $merchant->email ?: '—' }}</p></div>
-                <div><p class="text-ink-mute mb-1">Business type</p><p class="text-ink font-medium">{{ $merchant->business_type ?: '—' }}</p></div>
-                <div><p class="text-ink-mute mb-1">Region / City</p><p class="text-ink font-medium">{{ $merchant->region }} {{ $merchant->city }}</p></div>
+                <div><p class="text-ink-mute mb-1">Business type</p><p class="text-ink font-medium">{{ $merchant->businessTypeRef?->name ?? $merchant->business_type ?? '—' }}</p></div>
+                <div><p class="text-ink-mute mb-1">Region / City</p><p class="text-ink font-medium">{{ $merchant->regionRef?->name ?? $merchant->region }} {{ $merchant->city }}</p></div>
                 <div><p class="text-ink-mute mb-1">TIN</p><p class="text-ink font-medium tnum">{{ $merchant->tin_number ?: '—' }}</p></div>
                 <div><p class="text-ink-mute mb-1">Subscription tier</p><p class="text-ink font-medium capitalize">{{ $merchant->subscription_tier }}</p></div>
             </div>

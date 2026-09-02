@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InventoryItemResource;
 use App\Http\Resources\PaymentRecordResource;
+use App\Models\Invoice;
 use App\Models\Merchant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -32,11 +33,15 @@ class DashboardController extends Controller
             default => $this->dailyTrend($merchant, 30),
         };
 
+        $salesTotal = (float) $merchant->salesRecords()->where('sale_date', '>=', $trend['start'])->sum('amount');
+        $expensesTotal = (float) $merchant->expenses()->where('expense_date', '>=', $trend['start'])->sum('amount');
+
         return response()->json([
             'period' => $period,
             'period_label' => self::PERIOD_LABELS[$period],
-            'sales_total' => (float) $merchant->salesRecords()->where('sale_date', '>=', $trend['start'])->sum('amount'),
-            'expenses_total' => (float) $merchant->expenses()->where('expense_date', '>=', $trend['start'])->sum('amount'),
+            'sales_total' => $salesTotal,
+            'expenses_total' => $expensesTotal,
+            'profit_total' => $salesTotal - $expensesTotal,
             'low_stock_count' => $merchant->lowStockItems()->count(),
             'expiring_soon_count' => $merchant->expiringSoonItems()->count(),
             'unverified_payments_count' => $merchant->paymentRecords()->where('status', 'recorded')->count(),
@@ -44,11 +49,53 @@ class DashboardController extends Controller
                 'labels' => $trend['labels'],
                 'sales' => $trend['sales'],
                 'expenses' => $trend['expenses'],
+                'profit' => $trend['profit'],
             ],
+            'unpaid_today' => $this->unpaidInvoiceTotal($merchant, today: true),
+            'unpaid_total' => $this->unpaidInvoiceTotal($merchant, today: false),
+            'stock_summary' => $this->stockSummary($merchant),
+            'total_stores' => $merchant->branches()->count(),
             'low_stock_items' => InventoryItemResource::collection($merchant->lowStockItems()->limit(5)->get()),
             'expiring_soon_items' => InventoryItemResource::collection($merchant->expiringSoonItems()->orderBy('expiry_date')->limit(5)->get()),
             'recent_payments' => PaymentRecordResource::collection($merchant->paymentRecords()->latest('payment_date')->limit(5)->get()),
         ]);
+    }
+
+    /**
+     * Outstanding balance across unpaid/partially-paid invoices. With
+     * `today: true`, scoped to invoices issued today (matches the "unpaid
+     * amount for today" figure); otherwise the running all-time total.
+     */
+    private function unpaidInvoiceTotal(Merchant $merchant, bool $today): float
+    {
+        $invoices = $merchant->invoices()
+            ->whereIn('status', [Invoice::STATUS_INVOICED, Invoice::STATUS_PARTIALLY_PAID])
+            ->when($today, fn ($q) => $q->whereDate('issue_date', now()->toDateString()))
+            ->get(['total', 'amount_paid']);
+
+        return (float) $invoices->sum(fn ($invoice) => max(0, (float) $invoice->total - (float) $invoice->amount_paid));
+    }
+
+    /**
+     * Merchant-wide stock valuation — buying value at cost, selling value
+     * at listed price, and the expected profit if all stock on hand sold
+     * at that price. A snapshot, not scoped to the selected period.
+     */
+    private function stockSummary(Merchant $merchant): array
+    {
+        $row = $merchant->inventoryItems()
+            ->selectRaw('SUM(quantity_on_hand * COALESCE(unit_cost, 0)) as buying_value')
+            ->selectRaw('SUM(quantity_on_hand * COALESCE(unit_price, 0)) as selling_value')
+            ->first();
+
+        $buyingValue = (float) ($row->buying_value ?? 0);
+        $sellingValue = (float) ($row->selling_value ?? 0);
+
+        return [
+            'buying_value' => $buyingValue,
+            'selling_value' => $sellingValue,
+            'expected_profit' => $sellingValue - $buyingValue,
+        ];
     }
 
     /**
@@ -72,11 +119,15 @@ class DashboardController extends Controller
             ->groupBy('expense_date')
             ->pluck('total', 'expense_date');
 
+        $sales = $dates->map(fn ($d) => (float) ($salesByDay[$d] ?? 0))->all();
+        $expenses = $dates->map(fn ($d) => (float) ($expensesByDay[$d] ?? 0))->all();
+
         return [
             'start' => $start,
             'labels' => $dates->map(fn ($d) => Carbon::parse($d)->format('d M'))->all(),
-            'sales' => $dates->map(fn ($d) => (float) ($salesByDay[$d] ?? 0))->all(),
-            'expenses' => $dates->map(fn ($d) => (float) ($expensesByDay[$d] ?? 0))->all(),
+            'sales' => $sales,
+            'expenses' => $expenses,
+            'profit' => array_map(fn ($s, $e) => $s - $e, $sales, $expenses),
         ];
     }
 
@@ -103,11 +154,15 @@ class DashboardController extends Controller
             ->groupBy(fn ($row) => Carbon::parse($row->expense_date)->format('Y-m'))
             ->map(fn ($rows) => (float) $rows->sum('amount'));
 
+        $salesByMonth = $periods->map(fn ($p) => $sales[$p->format('Y-m')] ?? 0.0)->all();
+        $expensesByMonth = $periods->map(fn ($p) => $expenses[$p->format('Y-m')] ?? 0.0)->all();
+
         return [
             'start' => $start->toDateString(),
             'labels' => $periods->map(fn ($p) => $p->format('M Y'))->all(),
-            'sales' => $periods->map(fn ($p) => $sales[$p->format('Y-m')] ?? 0.0)->all(),
-            'expenses' => $periods->map(fn ($p) => $expenses[$p->format('Y-m')] ?? 0.0)->all(),
+            'sales' => $salesByMonth,
+            'expenses' => $expensesByMonth,
+            'profit' => array_map(fn ($s, $e) => $s - $e, $salesByMonth, $expensesByMonth),
         ];
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\BusinessType;
 use App\Models\Merchant;
 use App\Models\PaymentMethod;
+use App\Models\Region;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,9 +22,9 @@ class Register extends Component
 
     public string $phone = '';
 
-    public string $business_type = '';
+    public string $business_type_id = '';
 
-    public string $region = '';
+    public string $region_id = '';
 
     public string $email = '';
 
@@ -36,8 +38,8 @@ class Register extends Component
             'business_name' => ['required', 'string', 'max:255'],
             'owner_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'business_type' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'business_type_id' => ['nullable', 'exists:business_types,id'],
+            'region_id' => ['nullable', 'exists:regions,id'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -48,8 +50,8 @@ class Register extends Component
                 'owner_name' => $this->owner_name,
                 'phone' => $this->phone,
                 'email' => $this->email,
-                'business_type' => $this->business_type,
-                'region' => $this->region,
+                'business_type_id' => $this->business_type_id ?: null,
+                'region_id' => $this->region_id ?: null,
                 'kyc_status' => Merchant::KYC_PENDING,
             ]);
 
@@ -77,6 +79,9 @@ class Register extends Component
 
     public function render()
     {
-        return view('livewire.auth.register');
+        return view('livewire.auth.register', [
+            'businessTypes' => BusinessType::active()->orderBy('name')->get(),
+            'regions' => Region::active()->orderBy('name')->get(),
+        ]);
     }
 }

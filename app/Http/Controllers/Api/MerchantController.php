@@ -21,9 +21,9 @@ class MerchantController extends Controller
             'business_name' => ['sometimes', 'string', 'max:255'],
             'owner_name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'string', 'max:30'],
-            'business_type' => ['nullable', 'string', 'max:255'],
+            'business_type_id' => ['nullable', 'integer', 'exists:business_types,id'],
             'physical_address' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
             'city' => ['nullable', 'string', 'max:255'],
             'brand_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);

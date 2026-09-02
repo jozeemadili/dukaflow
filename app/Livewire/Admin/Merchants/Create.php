@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Admin\Merchants;
 
+use App\Models\BusinessType;
 use App\Models\Merchant;
 use App\Models\PaymentMethod;
+use App\Models\Region;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,9 +24,9 @@ class Create extends Component
 
     public string $email = '';
 
-    public string $business_type = '';
+    public string $business_type_id = '';
 
-    public string $region = '';
+    public string $region_id = '';
 
     public string $city = '';
 
@@ -37,8 +39,8 @@ class Create extends Component
             'owner_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'business_type' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'business_type_id' => ['nullable', 'exists:business_types,id'],
+            'region_id' => ['nullable', 'exists:regions,id'],
             'city' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -50,8 +52,8 @@ class Create extends Component
                 'owner_name' => $this->owner_name,
                 'phone' => $this->phone,
                 'email' => $this->email,
-                'business_type' => $this->business_type,
-                'region' => $this->region,
+                'business_type_id' => $this->business_type_id ?: null,
+                'region_id' => $this->region_id ?: null,
                 'city' => $this->city,
                 'kyc_status' => $this->markVerified ? Merchant::KYC_APPROVED : Merchant::KYC_PENDING,
                 'created_by_agent_id' => $admin->id,
@@ -82,6 +84,9 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.admin.merchants.create');
+        return view('livewire.admin.merchants.create', [
+            'businessTypes' => BusinessType::active()->orderBy('name')->get(),
+            'regions' => Region::active()->orderBy('name')->get(),
+        ]);
     }
 }

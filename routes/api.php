@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\KycDocumentController;
+use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\MerchantController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\SalesController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StockReceiptController;
+use App\Http\Controllers\Api\StoreLeaseController;
 use App\Http\Controllers\Api\SupplierController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +27,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/google', [AuthController::class, 'google']);
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+
+    // Reference data for the registration screen — no session token yet.
+    Route::get('/business-types', [LookupController::class, 'businessTypes']);
+    Route::get('/regions', [LookupController::class, 'regions']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -54,6 +60,15 @@ Route::prefix('v1')->group(function () {
             // --- Branches / stores -----------------------------------------
             Route::get('/branches', [BranchController::class, 'index']);
             Route::post('/branches', [BranchController::class, 'store']);
+            Route::get('/branches/{branch}', [BranchController::class, 'show']);
+
+            // --- Store leases / rent (separate from the dashboard) ---------
+            Route::get('/store-leases', [StoreLeaseController::class, 'index']);
+            Route::post('/store-leases', [StoreLeaseController::class, 'store']);
+            Route::get('/store-leases/{lease}', [StoreLeaseController::class, 'show']);
+            Route::patch('/store-leases/{lease}', [StoreLeaseController::class, 'update']);
+            Route::post('/store-leases/{lease}/payments', [StoreLeaseController::class, 'recordPayment']);
+            Route::post('/store-leases/{lease}/contract', [StoreLeaseController::class, 'uploadContract']);
 
             // --- Stock receipts --------------------------------------------
             Route::get('/stock-receipts', [StockReceiptController::class, 'index']);

@@ -73,8 +73,8 @@ class AuthController extends Controller
             'business_name' => ['required', 'string', 'max:255'],
             'owner_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'business_type' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'business_type_id' => ['nullable', 'integer', 'exists:business_types,id'],
+            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
             'email' => ['required', 'email', 'unique:users,email'],
             'google_id' => ['nullable', 'string'],
             'password' => [Rule::requiredIf(fn () => ! $request->filled('google_id')), 'nullable', 'string', 'min:8'],
@@ -86,8 +86,8 @@ class AuthController extends Controller
                 'owner_name' => $data['owner_name'],
                 'phone' => $data['phone'],
                 'email' => $data['email'],
-                'business_type' => $data['business_type'] ?? null,
-                'region' => $data['region'] ?? null,
+                'business_type_id' => $data['business_type_id'] ?? null,
+                'region_id' => $data['region_id'] ?? null,
                 'kyc_status' => Merchant::KYC_PENDING,
             ]);
 
