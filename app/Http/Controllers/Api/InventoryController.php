@@ -18,6 +18,7 @@ class InventoryController extends Controller
     {
         $items = InventoryItem::where('merchant_id', Auth::user()->merchant_id)
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', $request->integer('branch_id')))
             ->when($request->filled('search'), fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->string('search').'%')
                     ->orWhere('sku', 'like', '%'.$request->string('search').'%')
