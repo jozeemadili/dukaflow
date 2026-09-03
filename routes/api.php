@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/inventory', [InventoryController::class, 'index']);
             Route::post('/inventory', [InventoryController::class, 'store']);
             Route::get('/inventory/categories', [InventoryController::class, 'categories']);
+            Route::post('/inventory/categories', [InventoryController::class, 'storeCategory']);
             Route::get('/inventory/lookup-barcode/{code}', [InventoryController::class, 'lookupBarcode']);
             Route::post('/inventory/barcode-labels', [InventoryController::class, 'barcodeLabelsPdf']);
             Route::get('/inventory/{item}', [InventoryController::class, 'show']);

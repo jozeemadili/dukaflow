@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\InventoryItemResource;
-use App\Http\Resources\PaymentRecordResource;
 use App\Models\Invoice;
 use App\Models\Merchant;
 use Illuminate\Http\Request;
@@ -36,12 +34,19 @@ class DashboardController extends Controller
         $salesTotal = (float) $merchant->salesRecords()->where('sale_date', '>=', $trend['start'])->sum('amount');
         $expensesTotal = (float) $merchant->expenses()->where('expense_date', '>=', $trend['start'])->sum('amount');
 
+        $today = now()->toDateString();
+        $todaySales = (float) $merchant->salesRecords()->where('sale_date', $today)->sum('amount');
+        $todayExpenses = (float) $merchant->expenses()->where('expense_date', $today)->sum('amount');
+
         return response()->json([
             'period' => $period,
             'period_label' => self::PERIOD_LABELS[$period],
             'sales_total' => $salesTotal,
             'expenses_total' => $expensesTotal,
             'profit_total' => $salesTotal - $expensesTotal,
+            'today_sales_total' => $todaySales,
+            'today_expenses_total' => $todayExpenses,
+            'today_profit_total' => $todaySales - $todayExpenses,
             'low_stock_count' => $merchant->lowStockItems()->count(),
             'expiring_soon_count' => $merchant->expiringSoonItems()->count(),
             'unverified_payments_count' => $merchant->paymentRecords()->where('status', 'recorded')->count(),
@@ -55,9 +60,6 @@ class DashboardController extends Controller
             'unpaid_total' => $this->unpaidInvoiceTotal($merchant, today: false),
             'stock_summary' => $this->stockSummary($merchant),
             'total_stores' => $merchant->branches()->count(),
-            'low_stock_items' => InventoryItemResource::collection($merchant->lowStockItems()->limit(5)->get()),
-            'expiring_soon_items' => InventoryItemResource::collection($merchant->expiringSoonItems()->orderBy('expiry_date')->limit(5)->get()),
-            'recent_payments' => PaymentRecordResource::collection($merchant->paymentRecords()->latest('payment_date')->limit(5)->get()),
         ]);
     }
 

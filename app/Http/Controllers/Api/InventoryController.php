@@ -228,6 +228,20 @@ class InventoryController extends Controller
             ->get(['id', 'name']);
     }
 
+    public function storeCategory(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $category = InventoryCategory::create([
+            ...$data,
+            'merchant_id' => Auth::user()->merchant_id,
+        ]);
+
+        return response()->json(['id' => $category->id, 'name' => $category->name]);
+    }
+
     protected function authorizeItem(Request $request, InventoryItem $item): void
     {
         abort_unless($item->merchant_id === $request->user()->merchant_id, 403);
