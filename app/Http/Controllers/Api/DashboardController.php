@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Merchant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -31,11 +32,17 @@ class DashboardController extends Controller
             default => $this->dailyTrend($merchant, 30),
         };
 
-        $salesTotal = (float) $merchant->salesRecords()->where('sale_date', '>=', $trend['start'])->sum('amount');
+        $posSales = (float) $merchant->salesRecords()->where('sale_date', '>=', $trend['start'])->sum('amount');
+        $invoiceSales = $this->paidInvoiceTotal($merchant, $trend['start']);
+        $salesTotal = $posSales + $invoiceSales;
+        $cogsTotal = $this->posCogs($merchant, $trend['start']) + $this->invoiceCogs($merchant, $trend['start']);
         $expensesTotal = (float) $merchant->expenses()->where('expense_date', '>=', $trend['start'])->sum('amount');
 
         $today = now()->toDateString();
-        $todaySales = (float) $merchant->salesRecords()->where('sale_date', $today)->sum('amount');
+        $todayPosSales = (float) $merchant->salesRecords()->where('sale_date', $today)->sum('amount');
+        $todayInvoiceSales = $this->paidInvoiceTotal($merchant, $today);
+        $todaySales = $todayPosSales + $todayInvoiceSales;
+        $todayCogs = $this->posCogs($merchant, $today) + $this->invoiceCogs($merchant, $today);
         $todayExpenses = (float) $merchant->expenses()->where('expense_date', $today)->sum('amount');
 
         return response()->json([
@@ -43,10 +50,10 @@ class DashboardController extends Controller
             'period_label' => self::PERIOD_LABELS[$period],
             'sales_total' => $salesTotal,
             'expenses_total' => $expensesTotal,
-            'profit_total' => $salesTotal - $expensesTotal,
+            'profit_total' => $salesTotal - $cogsTotal - $expensesTotal,
             'today_sales_total' => $todaySales,
             'today_expenses_total' => $todayExpenses,
-            'today_profit_total' => $todaySales - $todayExpenses,
+            'today_profit_total' => $todaySales - $todayCogs - $todayExpenses,
             'low_stock_count' => $merchant->lowStockItems()->count(),
             'expiring_soon_count' => $merchant->expiringSoonItems()->count(),
             'unverified_payments_count' => $merchant->paymentRecords()->where('status', 'recorded')->count(),
@@ -61,6 +68,49 @@ class DashboardController extends Controller
             'stock_summary' => $this->stockSummary($merchant),
             'total_stores' => $merchant->branches()->count(),
         ]);
+    }
+
+    /**
+     * Revenue from fully-paid invoices, dated by when they were paid (not
+     * issued) so it lands in the same day/period bucket a cash sale would.
+     */
+    private function paidInvoiceTotal(Merchant $merchant, string $sinceDate): float
+    {
+        return (float) $merchant->invoices()
+            ->where('status', Invoice::STATUS_PAID)
+            ->whereNotNull('paid_at')
+            ->whereDate('paid_at', '>=', $sinceDate)
+            ->sum('total');
+    }
+
+    /**
+     * Cost of goods sold for POS sales dated on/after $sinceDate. Lines that
+     * predate unit_cost capture contribute 0, same "don't guess" policy used
+     * by the sales report.
+     */
+    private function posCogs(Merchant $merchant, string $sinceDate): float
+    {
+        return (float) DB::table('sale_items')
+            ->join('sales_records', 'sales_records.id', '=', 'sale_items.sale_id')
+            ->where('sales_records.merchant_id', $merchant->id)
+            ->where('sales_records.sale_date', '>=', $sinceDate)
+            ->selectRaw('COALESCE(SUM(COALESCE(sale_items.unit_cost, 0) * sale_items.quantity), 0) as total')
+            ->value('total');
+    }
+
+    /**
+     * Cost of goods sold for invoices paid on/after $sinceDate.
+     */
+    private function invoiceCogs(Merchant $merchant, string $sinceDate): float
+    {
+        return (float) DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.merchant_id', $merchant->id)
+            ->where('invoices.status', Invoice::STATUS_PAID)
+            ->whereNotNull('invoices.paid_at')
+            ->whereDate('invoices.paid_at', '>=', $sinceDate)
+            ->selectRaw('COALESCE(SUM(COALESCE(invoice_items.unit_cost, 0) * invoice_items.quantity), 0) as total')
+            ->value('total');
     }
 
     /**
@@ -102,18 +152,46 @@ class DashboardController extends Controller
 
     /**
      * Day-by-day sales/expenses for the trailing $days days (inclusive of
-     * today). Used for the "week" (7) and "month" (30) periods.
+     * today). Used for the "week" (7) and "month" (30) periods. Profit is
+     * true net profit: (POS + paid-invoice revenue) minus cost of goods
+     * sold minus expenses.
      */
     private function dailyTrend(Merchant $merchant, int $days): array
     {
         $dates = collect(range($days - 1, 0))->map(fn ($i) => now()->subDays($i)->toDateString());
         $start = $dates->first();
 
-        $salesByDay = $merchant->salesRecords()
+        $posSalesByDay = $merchant->salesRecords()
             ->selectRaw('sale_date, SUM(amount) as total')
             ->where('sale_date', '>=', $start)
             ->groupBy('sale_date')
             ->pluck('total', 'sale_date');
+
+        $invoiceSalesByDay = $merchant->invoices()
+            ->where('status', Invoice::STATUS_PAID)
+            ->whereNotNull('paid_at')
+            ->whereDate('paid_at', '>=', $start)
+            ->selectRaw('DATE(paid_at) as d, SUM(total) as total')
+            ->groupBy('d')
+            ->pluck('total', 'd');
+
+        $posCogsByDay = DB::table('sale_items')
+            ->join('sales_records', 'sales_records.id', '=', 'sale_items.sale_id')
+            ->where('sales_records.merchant_id', $merchant->id)
+            ->where('sales_records.sale_date', '>=', $start)
+            ->selectRaw('sales_records.sale_date as d, SUM(COALESCE(sale_items.unit_cost, 0) * sale_items.quantity) as total')
+            ->groupBy('sales_records.sale_date')
+            ->pluck('total', 'd');
+
+        $invoiceCogsByDay = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.merchant_id', $merchant->id)
+            ->where('invoices.status', Invoice::STATUS_PAID)
+            ->whereNotNull('invoices.paid_at')
+            ->whereDate('invoices.paid_at', '>=', $start)
+            ->selectRaw('DATE(invoices.paid_at) as d, SUM(COALESCE(invoice_items.unit_cost, 0) * invoice_items.quantity) as total')
+            ->groupBy('d')
+            ->pluck('total', 'd');
 
         $expensesByDay = $merchant->expenses()
             ->selectRaw('expense_date, SUM(amount) as total')
@@ -121,7 +199,8 @@ class DashboardController extends Controller
             ->groupBy('expense_date')
             ->pluck('total', 'expense_date');
 
-        $sales = $dates->map(fn ($d) => (float) ($salesByDay[$d] ?? 0))->all();
+        $sales = $dates->map(fn ($d) => (float) ($posSalesByDay[$d] ?? 0) + (float) ($invoiceSalesByDay[$d] ?? 0))->all();
+        $cogs = $dates->map(fn ($d) => (float) ($posCogsByDay[$d] ?? 0) + (float) ($invoiceCogsByDay[$d] ?? 0))->all();
         $expenses = $dates->map(fn ($d) => (float) ($expensesByDay[$d] ?? 0))->all();
 
         return [
@@ -129,7 +208,7 @@ class DashboardController extends Controller
             'labels' => $dates->map(fn ($d) => Carbon::parse($d)->format('d M'))->all(),
             'sales' => $sales,
             'expenses' => $expenses,
-            'profit' => array_map(fn ($s, $e) => $s - $e, $sales, $expenses),
+            'profit' => array_map(fn ($s, $c, $e) => $s - $c - $e, $sales, $cogs, $expenses),
         ];
     }
 
@@ -150,13 +229,42 @@ class DashboardController extends Controller
             ->groupBy(fn ($row) => Carbon::parse($row->sale_date)->format('Y-m'))
             ->map(fn ($rows) => (float) $rows->sum('amount'));
 
+        $invoiceSales = $merchant->invoices()
+            ->where('status', Invoice::STATUS_PAID)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '>=', $start)
+            ->get(['paid_at', 'total'])
+            ->groupBy(fn ($row) => Carbon::parse($row->paid_at)->format('Y-m'))
+            ->map(fn ($rows) => (float) $rows->sum('total'));
+
+        $posCogs = DB::table('sale_items')
+            ->join('sales_records', 'sales_records.id', '=', 'sale_items.sale_id')
+            ->where('sales_records.merchant_id', $merchant->id)
+            ->where('sales_records.sale_date', '>=', $start)
+            ->selectRaw('sales_records.sale_date as sale_date, COALESCE(sale_items.unit_cost, 0) * sale_items.quantity as cogs')
+            ->get()
+            ->groupBy(fn ($row) => Carbon::parse($row->sale_date)->format('Y-m'))
+            ->map(fn ($rows) => (float) $rows->sum('cogs'));
+
+        $invoiceCogs = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.merchant_id', $merchant->id)
+            ->where('invoices.status', Invoice::STATUS_PAID)
+            ->whereNotNull('invoices.paid_at')
+            ->where('invoices.paid_at', '>=', $start)
+            ->selectRaw('invoices.paid_at as paid_at, COALESCE(invoice_items.unit_cost, 0) * invoice_items.quantity as cogs')
+            ->get()
+            ->groupBy(fn ($row) => Carbon::parse($row->paid_at)->format('Y-m'))
+            ->map(fn ($rows) => (float) $rows->sum('cogs'));
+
         $expenses = $merchant->expenses()
             ->where('expense_date', '>=', $start)
             ->get(['expense_date', 'amount'])
             ->groupBy(fn ($row) => Carbon::parse($row->expense_date)->format('Y-m'))
             ->map(fn ($rows) => (float) $rows->sum('amount'));
 
-        $salesByMonth = $periods->map(fn ($p) => $sales[$p->format('Y-m')] ?? 0.0)->all();
+        $salesByMonth = $periods->map(fn ($p) => ($sales[$p->format('Y-m')] ?? 0.0) + ($invoiceSales[$p->format('Y-m')] ?? 0.0))->all();
+        $cogsByMonth = $periods->map(fn ($p) => ($posCogs[$p->format('Y-m')] ?? 0.0) + ($invoiceCogs[$p->format('Y-m')] ?? 0.0))->all();
         $expensesByMonth = $periods->map(fn ($p) => $expenses[$p->format('Y-m')] ?? 0.0)->all();
 
         return [
@@ -164,7 +272,7 @@ class DashboardController extends Controller
             'labels' => $periods->map(fn ($p) => $p->format('M Y'))->all(),
             'sales' => $salesByMonth,
             'expenses' => $expensesByMonth,
-            'profit' => array_map(fn ($s, $e) => $s - $e, $salesByMonth, $expensesByMonth),
+            'profit' => array_map(fn ($s, $c, $e) => $s - $c - $e, $salesByMonth, $cogsByMonth, $expensesByMonth),
         ];
     }
 }

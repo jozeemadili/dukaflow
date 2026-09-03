@@ -88,6 +88,7 @@ class InvoiceController extends Controller
             'item_name' => $item->name,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
+            'unit_cost' => $item->unit_cost,
             'gross_amount' => $gross,
             'discount_type' => $discountValue > 0 ? $discountType : null,
             'discount_value' => $discountValue > 0 ? $discountValue : null,
@@ -206,7 +207,11 @@ class InvoiceController extends Controller
                 ? Invoice::STATUS_PAID
                 : ($totalPaid > 0 ? Invoice::STATUS_PARTIALLY_PAID : Invoice::STATUS_INVOICED);
 
-            $invoice->update(['amount_paid' => $totalPaid, 'status' => $status]);
+            $invoice->update([
+                'amount_paid' => $totalPaid,
+                'status' => $status,
+                'paid_at' => $status === Invoice::STATUS_PAID ? now() : null,
+            ]);
         });
 
         return new InvoiceResource($invoice->fresh()->load(['items', 'customer', 'payments.paymentMethod']));

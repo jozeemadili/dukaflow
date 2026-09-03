@@ -14,7 +14,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 #[Fillable([
     'merchant_id', 'customer_id', 'branch_id', 'number', 'status',
-    'subtotal', 'discount_type', 'discount_value', 'discount_amount', 'total', 'amount_paid',
+    'subtotal', 'discount_type', 'discount_value', 'discount_amount', 'total', 'amount_paid', 'paid_at',
     'issue_date', 'due_date', 'notes', 'created_by', 'approved_by', 'approved_at',
 ])]
 class Invoice extends Model
@@ -50,6 +50,7 @@ class Invoice extends Model
             'issue_date' => 'date',
             'due_date' => 'date',
             'approved_at' => 'datetime',
+            'paid_at' => 'datetime',
         ];
     }
 
