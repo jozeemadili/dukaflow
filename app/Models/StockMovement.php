@@ -15,6 +15,8 @@ class StockMovement extends Model
 
     public const TYPE_ADJUSTMENT = 'adjustment';
 
+    public const TYPE_DAMAGE = 'damage';
+
     protected function casts(): array
     {
         return [

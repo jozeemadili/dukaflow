@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
@@ -135,6 +136,16 @@ class Merchant extends Model implements HasMedia
             ->whereNotNull('expiry_date')
             ->whereDate('expiry_date', '<=', now()->addMonth())
             ->whereDate('expiry_date', '>=', now());
+    }
+
+    public function damageReports(): HasMany
+    {
+        return $this->hasMany(DamageReport::class);
+    }
+
+    public function saleItems(): HasManyThrough
+    {
+        return $this->hasManyThrough(SaleItem::class, SalesRecord::class, 'merchant_id', 'sale_id');
     }
 
     public function stockReceipts(): HasMany

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DamageReportController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InventoryController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\PosController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SalesController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StockReceiptController;
@@ -120,6 +122,14 @@ Route::prefix('v1')->group(function () {
             // --- Dashboard & notifications -------------------------------
             Route::get('/dashboard', [DashboardController::class, 'index']);
             Route::get('/notifications', [NotificationController::class, 'index']);
+
+            // --- Damaged stock reporting -----------------------------------
+            Route::get('/damage-reports', [DamageReportController::class, 'index']);
+            Route::post('/damage-reports', [DamageReportController::class, 'store']);
+
+            // --- Reports ---------------------------------------------------
+            Route::get('/reports/sales/today', [ReportController::class, 'todaySales']);
+            Route::get('/reports/product-performance', [ReportController::class, 'productPerformance']);
 
             // --- KYC & staff -------------------------------------------
             Route::get('/kyc-documents', [KycDocumentController::class, 'index']);
