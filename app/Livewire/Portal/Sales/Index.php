@@ -6,6 +6,7 @@ use App\Models\SalesRecord;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -116,10 +117,41 @@ class Index extends Component
         ]);
     }
 
+    /**
+     * Buying-value/profit summary for the filtered date range. Only sale
+     * lines with a captured unit_cost contribute to buying value / profit —
+     * sales recorded before cost tracking started are left out rather than
+     * guessed at, and $profitPartial flags when that happened so the UI can
+     * note the totals are incomplete.
+     */
+    protected function costSummary(): array
+    {
+        $merchantId = Auth::user()->merchant_id;
+
+        $row = DB::table('sale_items')
+            ->join('sales_records', 'sales_records.id', '=', 'sale_items.sale_id')
+            ->where('sales_records.merchant_id', $merchantId)
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('sales_records.sale_date', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('sales_records.sale_date', '<=', $this->dateTo))
+            ->selectRaw('COALESCE(SUM(CASE WHEN sale_items.unit_cost IS NOT NULL THEN sale_items.unit_cost * sale_items.quantity ELSE 0 END), 0) as buying_value')
+            ->selectRaw('COALESCE(SUM(CASE WHEN sale_items.unit_cost IS NOT NULL THEN (sale_items.unit_price - sale_items.unit_cost) * sale_items.quantity ELSE 0 END), 0) as profit')
+            ->selectRaw('COUNT(sale_items.unit_cost) as cost_lines_count')
+            ->selectRaw('COUNT(*) as total_lines_count')
+            ->first();
+
+        return [
+            'buying_value' => (float) $row->buying_value,
+            'selling_value' => (float) $this->filteredQuery()->sum('amount'),
+            'profit' => (float) $row->profit,
+            'partial' => (int) $row->cost_lines_count < (int) $row->total_lines_count,
+        ];
+    }
+
     public function render()
     {
         $sales = $this->filteredQuery()->paginate(10);
+        $costSummary = $this->costSummary();
 
-        return view('livewire.portal.sales.index', compact('sales'));
+        return view('livewire.portal.sales.index', compact('sales', 'costSummary'));
     }
 }

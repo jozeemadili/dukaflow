@@ -42,6 +42,10 @@ class Index extends Component
 
     public string $branch_id = '';
 
+    public bool $addingNewBranch = false;
+
+    public string $newBranchName = '';
+
     public string $expiry_date = '';
 
     public string $unit = '';
@@ -120,6 +124,25 @@ class Index extends Component
         $this->addingNewCategory = false;
     }
 
+    public function updatedBranchId(string $value): void
+    {
+        $this->addingNewBranch = $value === '__new__';
+    }
+
+    public function saveNewBranch(): void
+    {
+        $this->validate(['newBranchName' => ['required', 'string', 'max:255']]);
+
+        $branch = Branch::create([
+            'merchant_id' => Auth::user()->merchant_id,
+            'name' => $this->newBranchName,
+        ]);
+
+        $this->branch_id = (string) $branch->id;
+        $this->newBranchName = '';
+        $this->addingNewBranch = false;
+    }
+
     public function filterByCategory(?int $categoryId): void
     {
         $this->categoryFilter = $categoryId ? (string) $categoryId : '';
@@ -130,8 +153,8 @@ class Index extends Component
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'category_id' => ['nullable'],
-            'branch_id' => ['nullable'],
+            'category_id' => ['required', 'exists:inventory_categories,id'],
+            'branch_id' => ['required', 'exists:branches,id'],
             'expiry_date' => ['nullable', 'date'],
             'barcode' => ['nullable', 'string', 'max:64', 'unique:inventory_items,barcode'],
             'reorder_level' => ['required', 'numeric', 'min:0'],
@@ -142,8 +165,8 @@ class Index extends Component
 
         $item = InventoryItem::create([
             'merchant_id' => Auth::user()->merchant_id,
-            'category_id' => $this->category_id && $this->category_id !== '__new__' ? $this->category_id : null,
-            'branch_id' => $this->branch_id ?: null,
+            'category_id' => $this->category_id,
+            'branch_id' => $this->branch_id,
             'name' => $this->name,
             'sku' => $this->sku ?: null,
             'barcode' => $this->barcode ?: null,
@@ -160,7 +183,7 @@ class Index extends Component
                 ->toMediaCollection('image');
         }
 
-        $this->reset(['name', 'sku', 'barcode', 'category_id', 'branch_id', 'expiry_date', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
+        $this->reset(['name', 'sku', 'barcode', 'category_id', 'branch_id', 'addingNewBranch', 'newBranchName', 'addingNewCategory', 'newCategoryName', 'expiry_date', 'unit', 'reorder_level', 'unit_cost', 'unit_price', 'image', 'showItemForm', 'nameMatches']);
         $this->reorder_level = '0';
         session()->flash('status', 'Inventory item added.');
     }

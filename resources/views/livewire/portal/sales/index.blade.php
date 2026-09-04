@@ -15,6 +15,18 @@
         </div>
     </x-ui.card>
 
+    <x-ui.card padding="p-5">
+        <p class="text-[12px] uppercase tracking-wide text-ink-mute mb-3">Totals for this period</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <x-ui.stat label="Buying value" value="TZS {{ number_format($costSummary['buying_value'], 0) }}" />
+            <x-ui.stat label="Selling value" value="TZS {{ number_format($costSummary['selling_value'], 0) }}" tone="primary" />
+            <x-ui.stat label="Profit" value="TZS {{ number_format($costSummary['profit'], 0) }}" :tone="$costSummary['profit'] >= 0 ? 'primary' : 'ruby'" />
+        </div>
+        @if($costSummary['partial'])
+            <p class="text-[12px] text-ink-mute mt-3">Buying value and profit only include sales with a recorded cost price — sales made before cost tracking started aren't guessed at.</p>
+        @endif
+    </x-ui.card>
+
     <x-ui.card padding="p-0">
         <table class="w-full text-[13px]">
             <thead class="bg-canvas-soft text-left text-[11px] uppercase tracking-wide text-ink-mute">

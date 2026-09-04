@@ -1,36 +1,30 @@
 <div class="space-y-4">
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <x-ui.card padding="p-5">
-            <x-ui.stat label="Sales (30 days)" value="TZS {{ number_format($salesLast30, 0) }}" tone="primary" />
-        </x-ui.card>
-        <x-ui.card padding="p-5">
-            <x-ui.stat label="Expenses (30 days)" value="TZS {{ number_format($expensesLast30, 0) }}" tone="ruby" />
-        </x-ui.card>
-        <x-ui.card padding="p-5">
-            <x-ui.stat label="Low stock items" :value="$lowStockCount" tone="lemon" />
-        </x-ui.card>
-        <x-ui.card padding="p-5">
-            <x-ui.stat label="Expiring soon" :value="$expiringSoonCount" tone="lemon" />
-        </x-ui.card>
-        <x-ui.card padding="p-5">
-            <x-ui.stat label="Payments awaiting verification" :value="$unverifiedPayments" tone="lemon" />
-        </x-ui.card>
-    </div>
-
     <x-ui.card>
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-[15px] text-ink-secondary">Sales vs expenses (14 days)</h2>
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+            <div>
+                <p class="text-[11px] uppercase tracking-wide text-ink-mute">Sales &middot; {{ $summary['period_label'] }}</p>
+                <p class="text-[30px] font-light leading-none tracking-tight tnum text-ink mt-1">TZS {{ number_format($summary['sales_total'], 0) }}</p>
+            </div>
+            <div class="flex items-center gap-1 bg-canvas-soft rounded-pill p-1">
+                @foreach(\App\Services\DashboardMetricsService::PERIOD_LABELS as $key => $label)
+                    <button
+                        wire:click="setPeriod('{{ $key }}')"
+                        class="px-3.5 py-1.5 rounded-pill text-[13px] transition {{ $summary['period'] === $key ? 'bg-brand-dark text-white' : 'text-ink-secondary hover:text-ink' }}"
+                    >{{ ucfirst($key) }}</button>
+                @endforeach
+            </div>
         </div>
+
         <x-ui.chart
             type="line"
-            :labels="$trendLabels"
+            :labels="$summary['trend']['labels']"
             :height="220"
             :datasets="[
                 [
                     'label' => 'Sales',
-                    'data' => $salesTrend,
-                    'borderColor' => '#c89a44',
-                    'backgroundColor' => 'rgba(200,154,68,0.12)',
+                    'data' => $summary['trend']['sales'],
+                    'borderColor' => '#001830',
+                    'backgroundColor' => 'rgba(0,24,48,0.06)',
                     'fill' => true,
                     'tension' => 0.4,
                     'pointRadius' => 0,
@@ -38,10 +32,20 @@
                 ],
                 [
                     'label' => 'Expenses',
-                    'data' => $expensesTrend,
+                    'data' => $summary['trend']['expenses'],
                     'borderColor' => '#ea2261',
-                    'backgroundColor' => 'rgba(234,34,97,0.06)',
+                    'backgroundColor' => 'rgba(234,34,97,0.04)',
                     'fill' => true,
+                    'tension' => 0.4,
+                    'pointRadius' => 0,
+                    'borderWidth' => 2,
+                ],
+                [
+                    'label' => 'Profit',
+                    'data' => $summary['trend']['profit'],
+                    'borderColor' => '#1b9e5a',
+                    'backgroundColor' => 'rgba(27,158,90,0.04)',
+                    'fill' => false,
                     'tension' => 0.4,
                     'pointRadius' => 0,
                     'borderWidth' => 2,
@@ -55,10 +59,46 @@
             ]"
         />
         <div class="flex items-center gap-4 mt-3 text-[12px] text-ink-mute">
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-primary"></span> Sales</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-brand-dark"></span> Sales</span>
             <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-ruby"></span> Expenses</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full" style="background:#1b9e5a"></span> Profit</span>
         </div>
     </x-ui.card>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <x-ui.card class="lg:col-span-2">
+            <h2 class="text-[15px] text-ink-secondary mb-4">Today</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <x-ui.stat label="Sales" value="TZS {{ number_format($summary['today_sales_total'], 0) }}" tone="primary" />
+                <x-ui.stat label="Profit" value="TZS {{ number_format($summary['today_profit_total'], 0) }}" :tone="$summary['today_profit_total'] >= 0 ? 'primary' : 'ruby'" />
+                <x-ui.stat label="Expenses" value="TZS {{ number_format($summary['today_expenses_total'], 0) }}" tone="ruby" />
+                <x-ui.stat label="Unpaid today" value="TZS {{ number_format($summary['unpaid_today'], 0) }}" tone="lemon" />
+            </div>
+        </x-ui.card>
+
+        <x-ui.card>
+            <h2 class="text-[15px] text-ink-secondary mb-4">{{ $summary['period_label'] }}</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.stat label="Profit" value="TZS {{ number_format($summary['profit_total'], 0) }}" :tone="$summary['profit_total'] >= 0 ? 'primary' : 'ruby'" />
+                <x-ui.stat label="Total unpaid" value="TZS {{ number_format($summary['unpaid_total'], 0) }}" tone="lemon" />
+            </div>
+        </x-ui.card>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Stock value (cost)" value="TZS {{ number_format($summary['stock_summary']['buying_value'], 0) }}" />
+        </x-ui.card>
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Stock value (selling)" value="TZS {{ number_format($summary['stock_summary']['selling_value'], 0) }}" />
+        </x-ui.card>
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Total stores" :value="$summary['total_stores']" tone="primary" />
+        </x-ui.card>
+        <x-ui.card padding="p-5">
+            <x-ui.stat label="Payments awaiting verification" :value="$summary['unverified_payments_count']" tone="lemon" />
+        </x-ui.card>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <x-ui.card>

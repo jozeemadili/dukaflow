@@ -78,23 +78,28 @@
                         @error('barcode') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <x-ui.select wire:model.live="category_id" label="Category" id="item_category">
-                            <option value="">Uncategorized</option>
+                        <x-ui.select wire:model.live="category_id" label="Category *" id="item_category">
+                            <option value="">Select a category…</option>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                             <option value="__new__">+ Add new category…</option>
                         </x-ui.select>
+                        @error('category_id') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-ui.select wire:model="branch_id" label="Store / branch" id="item_branch">
-                        <option value="">Not assigned</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                        @endforeach
-                    </x-ui.select>
+                    <div>
+                        <x-ui.select wire:model.live="branch_id" label="Store / branch *" id="item_branch">
+                            <option value="">Select a store…</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                            <option value="__new__">+ Add new store…</option>
+                        </x-ui.select>
+                        @error('branch_id') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                    </div>
                     <x-ui.input type="date" wire:model="expiry_date" label="Expiry date (optional)" id="item_expiry" />
                 </div>
 
@@ -105,6 +110,16 @@
                             @error('newCategoryName') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
                         </div>
                         <x-ui.button size="sm" wire:click="saveNewCategory" target="saveNewCategory">Add category</x-ui.button>
+                    </div>
+                @endif
+
+                @if($addingNewBranch)
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1 max-w-xs">
+                            <x-ui.input wire:model="newBranchName" label="New store name" id="new_inv_branch_name" />
+                            @error('newBranchName') <p class="text-ruby text-[12px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <x-ui.button size="sm" wire:click="saveNewBranch" target="saveNewBranch">Add store</x-ui.button>
                     </div>
                 @endif
 

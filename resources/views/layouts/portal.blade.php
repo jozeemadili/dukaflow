@@ -55,11 +55,17 @@
                     <a href="{{ route('portal.dashboard') }}" class="icon-dock-item {{ request()->routeIs('portal.dashboard') ? 'is-active' : '' }}">
                         <x-icon.dashboard class="h-4 w-4 shrink-0" /> Dashboard
                     </a>
+                    <a href="{{ route('portal.notifications.index') }}" class="icon-dock-item {{ request()->routeIs('portal.notifications.*') ? 'is-active' : '' }}">
+                        <x-icon.bell class="h-4 w-4 shrink-0" /> Notifications
+                    </a>
                     <a href="{{ route('portal.pos.index') }}" class="icon-dock-item {{ request()->routeIs('portal.pos.*') ? 'is-active' : '' }}">
                         <x-icon.pos class="h-4 w-4 shrink-0" /> Point of Sale
                     </a>
                     <a href="{{ route('portal.stores.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stores.*') ? 'is-active' : '' }}">
                         <x-icon.store class="h-4 w-4 shrink-0" /> Stores
+                    </a>
+                    <a href="{{ route('portal.store-leases.index') }}" class="icon-dock-item {{ request()->routeIs('portal.store-leases.*') ? 'is-active' : '' }}">
+                        <x-icon.receipt class="h-4 w-4 shrink-0" /> Store Leases
                     </a>
                     <a href="{{ route('portal.stock-receipts.index') }}" class="icon-dock-item {{ request()->routeIs('portal.stock-receipts.*') ? 'is-active' : '' }}">
                         <x-icon.stock-receipt class="h-4 w-4 shrink-0" /> Stock Receipts
@@ -75,6 +81,9 @@
                     </a>
                     <a href="{{ route('portal.sales.index') }}" class="icon-dock-item {{ request()->routeIs('portal.sales.*') ? 'is-active' : '' }}">
                         <x-icon.sales class="h-4 w-4 shrink-0" /> Sales
+                    </a>
+                    <a href="{{ route('portal.reports.product-performance') }}" class="icon-dock-item {{ request()->routeIs('portal.reports.*') ? 'is-active' : '' }}">
+                        <x-icon.target class="h-4 w-4 shrink-0" /> Product Performance
                     </a>
                     <a href="{{ route('portal.invoices.index') }}" class="icon-dock-item {{ request()->routeIs('portal.invoices.*') ? 'is-active' : '' }}">
                         <x-icon.invoice class="h-4 w-4 shrink-0" /> Invoices
@@ -167,7 +176,8 @@
                         $notifyMerchant = auth()->user()->merchant;
                         $notifyLowStock = $notifyMerchant->lowStockItems()->limit(5)->get();
                         $notifyExpiring = $notifyMerchant->expiringSoonItems()->orderBy('expiry_date')->limit(5)->get();
-                        $notifyCount = $notifyMerchant->lowStockItems()->count() + $notifyMerchant->expiringSoonItems()->count();
+                        $notifyDamaged = $notifyMerchant->damageReports()->with('inventoryItem')->latest('reported_at')->limit(5)->get();
+                        $notifyCount = $notifyMerchant->lowStockItems()->count() + $notifyMerchant->expiringSoonItems()->count() + $notifyMerchant->damageReports()->count();
                     @endphp
                     <div class="relative" x-data="{ notifyOpen: false }">
                         <button
@@ -200,12 +210,18 @@
                                         <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $item->name }}</strong> expires {{ $item->expiry_date->format('d M Y') }}.</span>
                                     </a>
                                 @endforeach
+                                @foreach($notifyDamaged as $report)
+                                    <a href="{{ route('portal.notifications.index') }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-canvas-soft">
+                                        <span class="mt-1 h-2 w-2 rounded-full bg-ink-mute shrink-0"></span>
+                                        <span class="text-[12.5px] text-ink-secondary"><strong class="text-ink">{{ $report->inventoryItem?->name ?? 'A product' }}</strong> — {{ rtrim(rtrim($report->quantity, '0'), '.') }} damaged.</span>
+                                    </a>
+                                @endforeach
                                 @if($notifyCount === 0)
                                     <p class="px-4 py-6 text-center text-[12.5px] text-ink-mute">You're all caught up.</p>
                                 @endif
                             </div>
                             @if($notifyCount > 0)
-                                <a href="{{ route('portal.inventory.index') }}" class="block px-4 py-2.5 text-center text-[12.5px] text-primary hover:text-primary-deep border-t border-hairline">View inventory &rarr;</a>
+                                <a href="{{ route('portal.notifications.index') }}" class="block px-4 py-2.5 text-center text-[12.5px] text-primary hover:text-primary-deep border-t border-hairline">View all notifications &rarr;</a>
                             @endif
                         </div>
                     </div>

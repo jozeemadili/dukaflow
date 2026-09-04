@@ -62,6 +62,10 @@ Route::middleware(['auth', 'internal'])->prefix('admin')->name('admin.')->group(
 Route::middleware(['auth', 'merchant'])->prefix('portal')->name('portal.')->group(function () {
     Route::get('/', Portal\Dashboard::class)->name('dashboard');
 
+    Route::get('/notifications', Portal\Notifications\Index::class)->name('notifications.index');
+    Route::get('/store-leases', Portal\StoreLeases\Index::class)->name('store-leases.index');
+    Route::get('/reports/product-performance', Portal\Reports\ProductPerformance::class)->name('reports.product-performance');
+
     Route::get('/pos', Portal\Pos\Index::class)->name('pos.index');
     Route::get('/sales', Portal\Sales\Index::class)->name('sales.index');
     Route::get('/expenses', Portal\Expenses\Index::class)->name('expenses.index');
